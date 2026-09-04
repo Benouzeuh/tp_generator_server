@@ -112,7 +112,17 @@ async function generateWithFallback(messages, { onProviderResult } = {}) {
 
   const mistralResult = await callMistral(messages);
   if (onProviderResult) onProviderResult(mistralResult);
-  return mistralResult;
+
+  if (mistralResult.ok) {
+    return mistralResult;
+  }
+
+  // Les deux ont échoué : on garde le détail des deux tentatives pour le debug.
+  return { ...mistralResult, attempts: { groq: summarize(groqResult), mistral: summarize(mistralResult) } };
+}
+
+function summarize(result) {
+  return { status: result.status, error: result.error, raw: result.raw };
 }
 
 module.exports = { callGroq, callMistral, generateWithFallback, parseRateLimitHeaders };
