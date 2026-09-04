@@ -14,6 +14,20 @@ const path = require("path");
  
 const CHAPTERS_META_PATH = path.join(__dirname, "..", "context", "chapters-meta.json");
 const EXAMPLE_TP_DIR = path.join(__dirname, "..", "context", "example-tp");
+const STRUCTURE_TEMPLATE_PATH = path.join(__dirname, "..", "context", "structure-template.md");
+ 
+let cachedStructureTemplate = null;
+ 
+function loadStructureTemplate() {
+  if (cachedStructureTemplate) return cachedStructureTemplate;
+  try {
+    cachedStructureTemplate = fs.readFileSync(STRUCTURE_TEMPLATE_PATH, "utf8").trim();
+  } catch (err) {
+    console.warn(`[context] Impossible de lire ${STRUCTURE_TEMPLATE_PATH} (${err.message}).`);
+    cachedStructureTemplate = "";
+  }
+  return cachedStructureTemplate;
+}
  
 let cachedChaptersMeta = null;
 let cachedExampleTp = null;
@@ -66,6 +80,7 @@ function loadExampleTp() {
 function reloadContext() {
   cachedChaptersMeta = null;
   cachedExampleTp = null;
+  cachedStructureTemplate = null;
 }
  
 /**
@@ -102,8 +117,7 @@ function buildContextBlock(chapterId) {
         .join("\n\n")
     : "(Aucun TP d'exemple disponible pour l'instant — le professeur n'en a pas encore déposé.)";
  
-  return { chapterSection, chapterList, examplesSection };
+  return { chapterSection, chapterList, examplesSection, structureTemplate: loadStructureTemplate() };
 }
  
-module.exports = { loadChaptersMeta, loadExampleTp, reloadContext, buildContextBlock };
- 
+module.exports = { loadChaptersMeta, loadExampleTp, loadStructureTemplate, reloadContext, buildContextBlock };
