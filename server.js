@@ -26,7 +26,15 @@ app.use(express.json({ limit: "20kb" }));
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "*").split(",").map((s) => s.trim());
 app.use(
   cors({
-    origin: allowedOrigins.includes("*") ? true : allowedOrigins,
+    origin: (origin, callback) => {
+      // Pas d'en-tête Origin (curl, Postman) OU origine "null" (fichier local ouvert en
+      // double-clic, cas fréquent pour tester l'aperçu HTML de l'appli) : toujours autorisé,
+      // ce n'est jamais un vrai site tiers qui essaierait d'abuser du quota.
+      if (!origin || origin === "null") return callback(null, true);
+      if (allowedOrigins.includes("*")) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Origine non autorisée par CORS"));
+    },
   })
 );
  
@@ -66,16 +74,20 @@ setInterval(reloadContext, 5 * 60 * 1000).unref();
  
 // ---------- Construction du prompt ----------
 function buildMessages(consigne, chapterId) {
-  const { chapterSection, chapterList, examplesSection, structureTemplate } = buildContextBlock(chapterId);
+  const { chapterSection, chapterList, examplesSection, structureTemplate, materiel } = buildContextBlock(chapterId);
  
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
  
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
-- Inspire-toi du format, du niveau d'exigence et du style des TP d'exemple du professeur fournis ci-dessous.
+- Les TP d'exemple du professeur fournis ci-dessous servent UNIQUEMENT à calibrer le niveau de difficulté et l'étendue de ce qui est attendu d'un élève de ce niveau — jamais leur mise en forme ni leur structure, qui ne doivent jamais être reproduites : la structure imposée ci-dessous prévaut toujours, quelle que soit celle des exemples.
+- Éviter de faire reposer le TP sur de longs calculs analytiques : privilégier la manipulation, l'observation et l'analyse conceptuelle des résultats. Des calculs simples et ponctuels sont bienvenus, pas des développements longs qui font perdre le fil de la manipulation.
 - Registre neutre, académique, adapté à un élève de BTS (pas de familiarité, pas de tutoiement excessif dans le contenu du TP lui-même).
  
 ${structureTemplate}
+ 
+Matériel réellement disponible en salle — le matériel proposé dans le TP (section "Matériel" et schémas) doit être choisi dans cette liste en priorité ; ne pas inventer de référence ou de valeur absente de cette liste, sauf si l'élève en demande explicitement une précise :
+${materiel}
  
 ${chapterSection}
  
@@ -148,4 +160,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`tp-generator-server à l'écoute sur le port ${PORT}`);
 });
- 
