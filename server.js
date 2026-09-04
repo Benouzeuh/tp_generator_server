@@ -66,7 +66,7 @@ setInterval(reloadContext, 5 * 60 * 1000).unref();
  
 // ---------- Construction du prompt ----------
 function buildMessages(consigne, chapterId) {
-  const { chapterSection, chapterList, examplesSection } = buildContextBlock(chapterId);
+  const { chapterSection, chapterList, examplesSection, structureTemplate } = buildContextBlock(chapterId);
  
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
  
@@ -74,7 +74,8 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Inspire-toi du format, du niveau d'exigence et du style des TP d'exemple du professeur fournis ci-dessous.
 - Registre neutre, académique, adapté à un élève de BTS (pas de familiarité, pas de tutoiement excessif dans le contenu du TP lui-même).
-- Structure attendue d'un TP, à adapter selon la consigne : objectifs, matériel/prérequis, manipulation(s) pas à pas, questions d'analyse, et si pertinent une piste de correction ou des résultats attendus.
+ 
+${structureTemplate}
  
 ${chapterSection}
  
@@ -147,3 +148,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`tp-generator-server à l'écoute sur le port ${PORT}`);
 });
+ 
