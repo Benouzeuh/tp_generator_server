@@ -4,10 +4,10 @@
 // fonction (generateWithFallback), pour ne jamais avoir à la retoucher ailleurs si on
 // change un jour de fournisseur ou de modèle : seuls le nom du modèle et l'URL changent,
 // et les deux vivent en variables d'environnement (voir .env.example).
-
+ 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions";
-
+ 
 /**
  * Lit les en-têtes de quota renvoyés par le fournisseur (présents même sur une
  * réponse réussie) pour savoir combien de marge il reste avant la prochaine limite.
@@ -24,12 +24,12 @@ function parseRateLimitHeaders(headers) {
     retryAfterSeconds: num(headers.get("retry-after")),
   };
 }
-
+ 
 async function callProvider({ url, apiKey, model, messages, temperature, maxTokens }) {
   if (!apiKey) {
     return { ok: false, status: 0, error: "missing_api_key", rateLimit: null, text: null };
   }
-
+ 
   let response;
   try {
     response = await fetch(url, {
@@ -49,9 +49,9 @@ async function callProvider({ url, apiKey, model, messages, temperature, maxToke
     // Panne réseau / DNS / timeout — traité comme un échec, déclenchera le secours.
     return { ok: false, status: 0, error: "network_error", rateLimit: null, text: null };
   }
-
+ 
   const rateLimit = parseRateLimitHeaders(response.headers);
-
+ 
   if (!response.ok) {
     // On lit quand même le corps pour le log serveur (pas renvoyé à l'élève tel quel).
     let bodyText = "";
@@ -69,33 +69,33 @@ async function callProvider({ url, apiKey, model, messages, temperature, maxToke
       raw: bodyText.slice(0, 500),
     };
   }
-
+ 
   const data = await response.json();
   const text = data?.choices?.[0]?.message?.content?.trim() ?? "";
-
+ 
   return { ok: true, status: 200, error: null, rateLimit, text };
 }
-
+ 
 async function callGroq(messages) {
   const result = await callProvider({
     url: GROQ_URL,
     apiKey: process.env.GROQ_API_KEY,
-    model: process.env.GROQ_MODEL || "qwen/qwen3-32b",
+    model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
     messages,
   });
   return { ...result, provider: "groq" };
 }
-
+ 
 async function callMistral(messages) {
   const result = await callProvider({
     url: MISTRAL_URL,
     apiKey: process.env.MISTRAL_API_KEY,
-    model: process.env.MISTRAL_MODEL || "mistral-large-2512",
+    model: process.env.MISTRAL_MODEL || "ministral-14b-2512",
     messages,
   });
   return { ...result, provider: "mistral" };
 }
-
+ 
 /**
  * Groq en principal. Bascule vers Mistral UNIQUEMENT si Groq échoue explicitement
  * (429 = quota atteint, panne réseau, erreur serveur Groq) — jamais en usage normal.
@@ -105,24 +105,25 @@ async function callMistral(messages) {
 async function generateWithFallback(messages, { onProviderResult } = {}) {
   const groqResult = await callGroq(messages);
   if (onProviderResult) onProviderResult(groqResult);
-
+ 
   if (groqResult.ok) {
     return groqResult;
   }
-
+ 
   const mistralResult = await callMistral(messages);
   if (onProviderResult) onProviderResult(mistralResult);
-
+ 
   if (mistralResult.ok) {
     return mistralResult;
   }
-
+ 
   // Les deux ont échoué : on garde le détail des deux tentatives pour le debug.
   return { ...mistralResult, attempts: { groq: summarize(groqResult), mistral: summarize(mistralResult) } };
 }
-
+ 
 function summarize(result) {
   return { status: result.status, error: result.error, raw: result.raw };
 }
-
+ 
 module.exports = { callGroq, callMistral, generateWithFallback, parseRateLimitHeaders };
+ 
