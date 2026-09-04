@@ -1,0 +1,230 @@
+[
+  {
+    "id": "pont-diviseur",
+    "file": "pont-diviseur.png",
+    "description": "Diviseur de tension simple : deux résistances R1, R2 en série alimentées par une source E, avec U1 et U2 mesurées.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "r1-r2-r3",
+    "file": "r1-r2-r3.png",
+    "description": "Réseau mixte : R1 en série avec le groupe (R2 // R3) en parallèle, alimenté par une source E.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "schema-a-4-resistances",
+    "file": "schema-a-4-resistances.png",
+    "description": "Réseau à 4 résistances (R1 en parallèle à la source, R2 en série, puis R3 // R4) pour exercice sur les lois des mailles et des nœuds.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "resistance-compliquee",
+    "file": "resistance-compliquee.png",
+    "description": "Réseau complexe de résistances de valeurs variées (10k, 4.7k, 8.2k, 1k) associées en série et en parallèle, alimenté en 10V, pour exercice de calcul de résistance équivalente.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "pont-de-wheatstone",
+    "file": "pont-de-wheatstone.png",
+    "description": "Pont de Wheatstone : deux diviseurs de tension en parallèle (R1-R2 et R3-R4) alimentés par la même source E, tensions U1 à U4 mesurées.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-rc-charge-decharge",
+    "file": "circuit-rc-charge-decharge.png",
+    "description": "Circuit RC série avec interrupteur, pour l'étude de la charge et décharge d'un condensateur (source E, résistance R1, tensions UR et UC).",
+    "chapterId": null
+  },
+  {
+    "id": "circuit-rl",
+    "file": "circuit-rl.png",
+    "description": "Circuit RL série avec interrupteur, pour l'étude de l'établissement/rupture du courant dans une bobine (source E, résistance R1, tensions UR et UL).",
+    "chapterId": null
+  },
+  {
+    "id": "circuit-rlc-serie",
+    "file": "circuit-rlc-serie.png",
+    "description": "Circuit RLC série avec interrupteur, pour l'étude du régime transitoire (source E, R, L, C en série, tensions UR, UL, UC).",
+    "chapterId": null
+  },
+  {
+    "id": "circuit-rlc-complique",
+    "file": "circuit-rlc-complique.png",
+    "description": "Circuit RLC plus complexe : source E(t), R en série, nœud vers C (à la masse) puis L en série, puis diviseur R1/R2 en sortie mesurant U1(t) et U2(t).",
+    "chapterId": null
+  },
+  {
+    "id": "quadripole-rc",
+    "file": "quadripole-rc.png",
+    "description": "Quadripôle filtre RC passe-bas simple : R en série, C en sortie vers la masse, Ve en entrée, Vs en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "circuit-cr-passe-haut",
+    "file": "circuit-cr-passe-haut.png",
+    "description": "Quadripôle filtre CR passe-haut : condensateur en série, résistance en sortie vers la masse, Ve en entrée, Vs en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "circuit-lcr-passe-bas",
+    "file": "circuit-lcr-passe-bas.png",
+    "description": "Filtre LCR passe-bas : inductance L en série, résistance R et condensateur C en parallèle en sortie (V1 entrée, V2 sortie).",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-rlc-serie-passe-bas",
+    "file": "quadripole-rlc-serie-passe-bas.png",
+    "description": "Filtre RLC série passe-bas : résistance R et inductance L en série, condensateur C en sortie vers la masse (Ve entrée, Vs sortie).",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "rlc-passe-bande",
+    "file": "rlc-passe-bande.png",
+    "description": "Filtre RLC série passe-bande : inductance L et condensateur C en série, résistance R1 en sortie vers la masse (Ve entrée, Vs sortie), avec UL et UC indiqués.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "passe-bande-ordre-3-dur",
+    "file": "passe-bande-ordre-3-dur.png",
+    "description": "Filtre passe-bande d'ordre 3 plus complexe : C et L en série, R en parallèle vers la masse, puis R en série, puis C en sortie vers la masse.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "rc-passe-haut-haut-adapt",
+    "file": "rc-passe-haut-haut-adapt.png",
+    "description": "Filtre RC passe-haut suivi d'un montage suiveur (adaptateur d'impédance) à amplificateur opérationnel avant la résistance de charge en sortie.",
+    "chapterId": "ch14"
+  },
+  {
+    "id": "filtre-passe-haut-ordre-2-bode",
+    "file": "filtre-passe-haut-ordre-2.png",
+    "description": "Diagramme de Bode du gain (amplitude en dB en fonction de la fréquence) d'un filtre passe-haut du second ordre.",
+    "chapterId": "ch8"
+  },
+  {
+    "id": "bode-gain-1er-ordre-passe-bas",
+    "file": "bode-gain-1er-ordre-passe-bas.png",
+    "description": "Diagramme de Bode du gain d'un filtre passe-bas du premier ordre, avec la formule de la fonction de transfert T(f).",
+    "chapterId": "ch8"
+  },
+  {
+    "id": "amplificateur-inverseur",
+    "file": "amplificateur-inverseur.png",
+    "description": "Montage amplificateur inverseur à amplificateur opérationnel : Ve à travers R1 sur l'entrée inverseuse, R2 en contre-réaction, entrée non-inverseuse à la masse.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "montage-ao-amplificateur-non-inverseur",
+    "file": "montage-ao-amplificateur-non-inverseur.png",
+    "description": "Montage amplificateur non-inverseur à amplificateur opérationnel : Ve sur l'entrée non-inverseuse, R1 à la masse et R2 en contre-réaction sur l'entrée inverseuse.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "sommateur",
+    "file": "sommateur.png",
+    "description": "Montage sommateur inverseur à amplificateur opérationnel : deux tensions V1 et V2 chacune à travers une résistance R vers l'entrée inverseuse, résistance R de contre-réaction.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "comp-hysteresis",
+    "file": "comp-hysteresis.png",
+    "description": "Comparateur à hystérésis (trigger de Schmitt) à amplificateur opérationnel, avec résistances R1 et R2 et une source de référence sur l'entrée inverseuse.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "resistance-neg",
+    "file": "resistance-neg.png",
+    "description": "Montage à résistance négative (convertisseur d'impédance négative) à amplificateur opérationnel, avec résistances R1, R2, R3.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "alim-diode-led",
+    "file": "alim-diode-led.png",
+    "description": "Circuit d'alimentation d'une LED avec résistance série de limitation de courant R1, source de tension, courant I indiqué.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "montage-avec-rldr",
+    "file": "montage-avec-rldr.png",
+    "description": "Diviseur de tension avec une photorésistance (RLDR) recevant de la lumière, en série avec une résistance R1.",
+    "chapterId": "ch12"
+  },
+  {
+    "id": "reponse-ldr",
+    "file": "reponse-ldr.png",
+    "description": "Courbe caractéristique typique d'une photorésistance (LDR) : résistance en Ohms en fonction de l'éclairement en Lux (échelle log-log), avec photo du composant.",
+    "chapterId": "ch12"
+  },
+  {
+    "id": "allumage-led-puissance-information",
+    "file": "allumage-led-puissance-information.png",
+    "description": "Schéma pédagogique distinguant chaîne de puissance (alimentation + LED) et chaîne de commande (carte STM32 Nucleo + module Grove), reliées par une jonction.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "schema-mli-moteur",
+    "file": "schema-mli-moteur.png",
+    "description": "Système complet de commande PWM d'un moteur à courant continu : alimentation continue, diviseur R1/R2 de mesure, carte STM32 Nucleo, module relais, module driver moteur (Grove), potentiomètre de consigne, moteur.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "commande-moteur-tor",
+    "file": "commande-moteur-tor.png",
+    "description": "Commande tout-ou-rien (TOR) d'un moteur : batterie, dispositif de mesure, interrupteur commandé par carte STM32 Nucleo, bouton poussoir, moteur.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "puiissance-moteur",
+    "file": "puiissance-moteur.png",
+    "description": "Branchement direct et simple d'une batterie (tension maximale 30V) sur un moteur à courant continu, sans électronique intermédiaire.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "antenne-patch-e-scilab-et-h",
+    "file": "antenne-patch-e-scilab-et-h.png",
+    "description": "Diagrammes de rayonnement (plan E et plan H) d'une antenne patch, tracés polaires en dB obtenus sous Scilab.",
+    "chapterId": "ch11"
+  },
+  {
+    "id": "antenne-dipole-3d",
+    "file": "antenne-dipole-3d.png",
+    "description": "Diagramme de rayonnement 3D d'une antenne dipôle (forme en tore), représentation avec axes X, Y, Z.",
+    "chapterId": "ch11"
+  },
+  {
+    "id": "tableau-dtmf",
+    "file": "tableau-dtmf.png",
+    "description": "Tableau des fréquences DTMF (double fréquence) utilisées pour la numérotation téléphonique à touches, lignes 697-941 Hz et colonnes 1209-1633 Hz.",
+    "chapterId": null
+  },
+  {
+    "id": "principe-de-mesure-oscilloscope",
+    "file": "principe-de-mesure-oscilloscope.png",
+    "description": "Fiche méthode texte expliquant les 3 façons de mesurer une tension/un temps sur un oscilloscope : à l'œil, par mesure automatique, par les curseurs.",
+    "chapterId": "ch22"
+  },
+  {
+    "id": "reglage-oscilloscope",
+    "file": "reglage-oscilloscope.png",
+    "description": "Fiche méthode illustrée expliquant les 4 zones de réglage d'un oscilloscope (base d'amplitude, base de temps, trigger, mesures) avec photo annotée d'un oscilloscope Tektronix.",
+    "chapterId": "ch22"
+  },
+  {
+    "id": "base-shield",
+    "file": "base-shield.png",
+    "description": "Photo du Grove Base Shield (carte d'extension permettant de connecter les modules Grove sur la STM32 Nucleo ou Arduino).",
+    "chapterId": null
+  },
+  {
+    "id": "montage-avec-potentiometre-et-un-autre",
+    "file": "montage-avec-potentiometre-et-un-autre.png",
+    "description": "Photo d'un Grove Base Shield avec un module potentiomètre rotatif et un autre module Grove connectés.",
+    "chapterId": null
+  },
+  {
+    "id": "stm32-l152re-pinout",
+    "file": "stm32-l152re-pinout.png",
+    "description": "Brochage (pinout) complet de la carte STM32 Nucleo L152RE, avec en-têtes Arduino, GPIO, PWM, I2C, SPI annotés.",
+    "chapterId": null
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "name": "tp-generator-server",
+  "version": "1.0.0",
+  "description": "Serveur relais (Groq principal + Mistral en secours) pour le générateur de TP de l'appli de révision BTS CIEL.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "sync-chapters": "node scripts/sync-chapters.js",
+    "sync-schemas": "node scripts/sync-schemas.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
