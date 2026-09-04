@@ -26,6 +26,7 @@ function parseRateLimitHeaders(headers) {
 }
  
 async function callProvider({ url, apiKey, model, messages, temperature, maxTokens }) {
+  const configuredMaxTokens = Number(process.env.GENERATION_MAX_TOKENS) || 4000;
   if (!apiKey) {
     return { ok: false, status: 0, error: "missing_api_key", rateLimit: null, text: null };
   }
@@ -42,7 +43,7 @@ async function callProvider({ url, apiKey, model, messages, temperature, maxToke
         model,
         messages,
         temperature: temperature ?? 0.7,
-        max_tokens: maxTokens ?? 2000,
+        max_tokens: maxTokens ?? configuredMaxTokens,
       }),
     });
   } catch (networkError) {
@@ -126,4 +127,3 @@ function summarize(result) {
 }
  
 module.exports = { callGroq, callMistral, generateWithFallback, parseRateLimitHeaders };
- 
