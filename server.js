@@ -100,12 +100,20 @@ ${schemasSection}`
   // (menu déroulant de l'onglet Création, session du 5 septembre 2026) :
   // 0 = aucun, 1 = un seul dans tout le TP (défaut), "chaque" = à chaque mesure.
   const incertitudeSetting = incertitude === "0" || incertitude === "chaque" ? incertitude : "1";
-  const incertitudeBlock =
+  const incertitudeCountBlock =
     incertitudeSetting === "0"
       ? `Incertitudes : n'inclus AUCUN calcul ni question d'incertitude dans ce TP, même en fin de partie.`
       : incertitudeSetting === "chaque"
       ? `Incertitudes : calcule/demande l'incertitude sur chaque mesure importante du TP (une question dédiée par mesure ou par série de mesures), pas seulement une fois.`
       : `Incertitudes : pas plus d'UNE question ou courte série de questions sur le calcul d'incertitude dans tout le TP. Ne jamais demander l'incertitude sur chaque mesure effectuée — c'est un exercice ponctuel, pas une routine à répéter à chaque manipulation.`;
+
+  // Méthode de calcul d'incertitude imposée (demande explicite de Ben,
+  // session du 5 septembre 2026) : uniquement la quadrature des incertitudes
+  // relatives, jamais une propagation par dérivées (partielles ou non).
+  const incertitudeMethodBlock = incertitudeSetting === "0" ? "" : `Méthode de calcul d'incertitude — IMPÉRATIF, une seule méthode autorisée en BTS CIEL : la quadrature des incertitudes RELATIVES, valable pour toute grandeur qui s'écrit comme un produit/quotient de puissances des grandeurs mesurées (ex: Rx = R1 . (Ue - Us) / Us). Pour une grandeur G = X1^a1 . X2^a2 . ... (les a_i pouvant être 1, -1, 2...), la formule à utiliser SYSTÉMATIQUEMENT est :
+  [FORMULE]\\frac{u(G)}{G} = \\sqrt{\\left(a_1\\frac{u(X_1)}{X_1}\\right)^2 + \\left(a_2\\frac{u(X_2)}{X_2}\\right)^2 + ...}[/FORMULE]
+  N'utilise JAMAIS de propagation par dérivées (partielles ou non), de coefficients de sensibilité calculés, ni aucune autre méthode — même simplifiée ou présentée différemment. Si la grandeur étudiée n'est pas un produit/quotient de puissances des grandeurs mesurées (somme, différence isolée, fonction non polynomiale...), NE PROPOSE PAS de question de calcul d'incertitude dessus plutôt que d'improviser une autre méthode.
+  Dans un Document théorique fourni en début de TP (rappel de cours) : rappelle UNIQUEMENT cette formule générale telle quelle, SANS l'appliquer ni l'adapter aux grandeurs particulières du montage à ce stade (pas de version réécrite avec les noms des grandeurs de ce TP) — l'application numérique avec les vraies grandeurs se fait uniquement dans la question d'exploitation dédiée décrite ci-dessus.`;
 
   // Conventions de rendu texte -> PDF : depuis le passage à MathJax (session
   // du 5 septembre 2026 avec Ben), tout ce qui est entre [FORMULE]...[/FORMULE]
@@ -114,18 +122,19 @@ ${schemasSection}`
   // formules (texte courant), aucun moteur de rendu mathématique n'est
   // disponible : la notation doit y rester simple (texte brut).
   const notationBlock = `Conventions de notation impératives dans le texte généré :
-- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
+- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne — SANS EXCEPTION, y compris pour une formule courte type "f = 1/T" ou "Ueff = Umax". Une formule laissée sans ce marqueur reste du texte brut illisible (ex: "racine((1)/(T)...)") au lieu d'un vrai rendu mathématique. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
 - À L'INTÉRIEUR d'un bloc [FORMULE]...[/FORMULE] : utilise du LaTeX standard, normalement — \\frac{}{} pour les fractions, \\sqrt{} pour les racines, _{} pour les indices, ^{} pour les exposants, \\Omega/\\pi/\\Delta/\\sum pour les symboles grecs et opérateurs. C'est rendu par un vrai moteur mathématique (MathJax), donc pas besoin de simplifier ou d'éviter ces commandes : écris la formule comme tu l'écrirais naturellement en LaTeX.
 - Notation d'incertitude : toujours "u(x)" avec de vraies parenthèses (jamais "u_x" en indice, qui se lirait comme une tout autre grandeur).
-- INTERDICTION ABSOLUE de la notation de dérivée partielle (symbole ∂, commande \\partial), y compris comme étape de calcul intermédiaire : le programme de BTS CIEL n'aborde pas les dérivées partielles, quelle que soit la formule concernée. Calcule toi-même le coefficient de sensibilité numérique ou symbolique et écris DIRECTEMENT la formule finale avec des variations Δ, sans jamais faire apparaître ∂ à aucune étape.
-  MAUVAIS (interdit, même si présenté comme "développé ensuite") : [FORMULE]u(U_2) = \\sqrt{(\\frac{\\partial U_2}{\\partial U_e} u(U_e))^2 + ...}[/FORMULE]
-  BON (attendu) : calcule directement les coefficients (ex: dérivée de U2 par rapport à chaque grandeur, mais SANS écrire ∂ nulle part) puis présente uniquement : [FORMULE]u(U_2) = \\sqrt{(k_1 \\, u(U_e))^2 + (k_2 \\, u(R_2))^2 + (k_3 \\, u(R_1))^2}[/FORMULE] où k_1, k_2, k_3 sont soit des valeurs numériques calculées, soit de courtes expressions symboliques déjà dérivées (jamais une notation ∂.../∂...).
-- ${incertitudeBlock}
+- ${incertitudeCountBlock}
+${incertitudeMethodBlock ? "- " + incertitudeMethodBlock : ""}
+- Ne réponds JAMAIS à une question que tu poses toi-même dans le TP : une question de manipulation ou d'exploitation doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue (ça retire tout l'intérêt pédagogique). Les formules données dans un Document théorique (rappels de cours, lois, relations générales) restent normales : la règle ne concerne que les réponses aux questions posées à l'élève.
 - EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
 
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
+- IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre du TP. Rien avant — ni commentaire, ni introduction, ni "Voici ton TP", ni ligne vide, ni signe de ponctuation isolé. Exemple de tout premier début de réponse : "Titre : Étude d'un filtre passe-bas du premier ordre".
+- Ta réponse ne contient QUE le TP lui-même, du titre jusqu'à la dernière question d'exploitation. N'ajoute aucun commentaire avant ou après (ex: pas de "N'hésite pas à demander de l'aide", pas de résumé final, pas de note personnelle) — rien que le contenu du TP.
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Les TP d'exemple du professeur fournis ci-dessous servent UNIQUEMENT à calibrer le niveau de difficulté et l'étendue de ce qui est attendu d'un élève de ce niveau — jamais leur mise en forme ni leur structure, qui ne doivent jamais être reproduites : la structure imposée ci-dessous prévaut toujours, quelle que soit celle des exemples.
 - Éviter de faire reposer le TP sur de longs calculs analytiques : privilégier la manipulation, l'observation et l'analyse conceptuelle des résultats. Des calculs simples et ponctuels sont bienvenus, pas des développements longs qui font perdre le fil de la manipulation.
