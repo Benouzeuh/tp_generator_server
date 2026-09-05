@@ -15,8 +15,16 @@ contenu s'adapte à la consigne, jamais l'ordre ni la présence de ces blocs.
 
 4. **Documents utiles** : un ou plusieurs encadrés numérotés ("Document N°1 – ...",
    "Document N°2 – ...", etc.) rassemblant tout ce qui est nécessaire pour réaliser
-   le TP sans avoir à rouvrir le cours. Ces documents sont fournis en bloc, avant les
-   parties — jamais dispersés dans le texte courant des parties elles-mêmes.
+   le TP sans avoir à rouvrir le cours.
+
+   **Tous les Documents utiles doivent être regroupés à la suite les uns des
+   autres, juste après le Matériel et AVANT la Partie I (donc avant la toute
+   première Manipulation) — jamais dispersés dans le texte courant des
+   parties, jamais un nouveau Document créé au milieu ou après une partie déjà
+   commencée.** Si un document théorique s'avère nécessaire pour une partie
+   ultérieure (II, III...), il doit malgré tout être placé avec tous les
+   autres Documents utiles en bloc au début, pas à côté de la partie qui s'en
+   sert.
 
    **Un Document ne peut contenir QUE l'un des quatre éléments suivants — jamais
    autre chose** :
@@ -53,7 +61,12 @@ contenu s'adapte à la consigne, jamais l'ordre ni la présence de ces blocs.
      à exécuter, pas des questions.
    - **Exploitation** : questions de calcul et d'analyse à partir des mesures de la
      manipulation qui précède. Formulées comme des consignes actionnables
-     ("Calculer...", "Comparer...", "Commenter...").
+     ("Calculer...", "Comparer...", "Commenter..."). **Une question du type "Calculer
+     X" ne doit JAMAIS être suivie de la formule donnant X — cette formule EST la
+     réponse attendue de l'élève. Écris uniquement la consigne ("Calculer RLED
+     nécessaire pour...") et arrête-toi là ; ne mets un [FORMULE] après une question
+     que si cette formule n'est PAS elle-même la chose demandée (ex: une donnée
+     supplémentaire nécessaire au calcul, pas son résultat).**
 
 6. Optionnel, en toute fin de TP : une question de synthèse qui reboucle
    explicitement sur la problématique initiale.
