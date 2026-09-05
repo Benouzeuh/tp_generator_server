@@ -15,17 +15,36 @@ contenu s'adapte à la consigne, jamais l'ordre ni la présence de ces blocs.
 
 4. **Documents utiles** : un ou plusieurs encadrés numérotés ("Document N°1 – ...",
    "Document N°2 – ...", etc.) rassemblant tout ce qui est nécessaire pour réaliser
-   le TP sans avoir à rouvrir le cours : schémas des montages, relations théoriques
-   (fonctions de transfert, formules d'incertitude, définitions), rappels de
-   méthode. Ces documents sont fournis en bloc, avant les parties — jamais dispersés
-   dans le texte courant des parties elles-mêmes.
+   le TP sans avoir à rouvrir le cours. Ces documents sont fournis en bloc, avant les
+   parties — jamais dispersés dans le texte courant des parties elles-mêmes.
+
+   **Un Document ne peut contenir QUE l'un des quatre éléments suivants — jamais
+   autre chose** :
+   - une image fournie par l'application via le marqueur [SCHEMA:identifiant]
+     (schéma électrique d'un montage, courbe/graphe, brochage d'un composant
+     comme la STM32...) ;
+   - une formule générale de cours (fonction de transfert, loi physique,
+     définition), donnée telle quelle, SANS l'appliquer aux grandeurs
+     particulières du montage ;
+   - la formule générale de calcul d'incertitude (voir plus haut), donnée telle
+     quelle, SANS l'appliquer au cas particulier ;
+   - une invitation à consulter la datasheet d'un composant pour y trouver une
+     caractéristique précise (ex : "Consulter la datasheet de la LED pour
+     déterminer le courant direct maximal admissible").
+
+   **Un Document ne doit JAMAIS contenir de raisonnement, d'interprétation, de
+   calcul appliqué, de valeur numérique déduite, ni aucune analyse — même
+   partielle. Ce travail revient entièrement à l'élève dans les parties
+   Manipulation/Exploitation, jamais fourni à l'avance dans un Document.** Si
+   aucun des quatre éléments ci-dessus ne s'applique à ce que tu voulais
+   mettre dans un Document, ne crée pas ce Document.
 
    **Ne jamais représenter un schéma de montage par un dessin ASCII-art ou des
    caractères de dessin de boîtes/lignes (┌─┐│└┘├┤┬┴┼→← etc.), même dans une
    cellule de tableau.** Ce texte n'est jamais mis en forme comme un vrai schéma
-   et devient illisible. Décrire le montage en une ou deux phrases claires à la
-   place (composants utilisés, comment ils sont reliés entre eux et à
-   l'alimentation) — le professeur ajoutera un vrai schéma si besoin.
+   et devient illisible. Utiliser le marqueur [SCHEMA:identifiant] approprié, ou
+   à défaut décrire le montage en une ou deux phrases claires — le professeur
+   ajoutera un vrai schéma si besoin.
 
 5. **Parties numérotées en chiffres romains** (I, II, III...), chacune structurée en
    exactement deux blocs, toujours dans cet ordre :
