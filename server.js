@@ -76,7 +76,7 @@ setInterval(() => {
 setInterval(reloadContext, 5 * 60 * 1000).unref();
 
 // ---------- Construction du prompt ----------
-function buildMessages(consigne, chapterId, duree, useStm32, image) {
+function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image) {
   const { chapterSection, chapterList, examplesSection, structureTemplate, materiel, schemasSection } =
     buildContextBlock(chapterId);
 
@@ -96,6 +96,17 @@ ${schemasSection}`
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
+  // Réglage "Calcul d'incertitude" choisi par le professeur dans l'appli
+  // (menu déroulant de l'onglet Création, session du 5 septembre 2026) :
+  // 0 = aucun, 1 = un seul dans tout le TP (défaut), "chaque" = à chaque mesure.
+  const incertitudeSetting = incertitude === "0" || incertitude === "chaque" ? incertitude : "1";
+  const incertitudeBlock =
+    incertitudeSetting === "0"
+      ? `Incertitudes : n'inclus AUCUN calcul ni question d'incertitude dans ce TP, même en fin de partie.`
+      : incertitudeSetting === "chaque"
+      ? `Incertitudes : calcule/demande l'incertitude sur chaque mesure importante du TP (une question dédiée par mesure ou par série de mesures), pas seulement une fois.`
+      : `Incertitudes : pas plus d'UNE question ou courte série de questions sur le calcul d'incertitude dans tout le TP. Ne jamais demander l'incertitude sur chaque mesure effectuée — c'est un exercice ponctuel, pas une routine à répéter à chaque manipulation.`;
+
   // Conventions de rendu texte -> PDF : depuis le passage à MathJax (session
   // du 5 septembre 2026 avec Ben), tout ce qui est entre [FORMULE]...[/FORMULE]
   // est rendu en vraie image mathématique à partir de LaTeX standard — plus
@@ -106,8 +117,10 @@ ${schemasSection}`
 - Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
 - À L'INTÉRIEUR d'un bloc [FORMULE]...[/FORMULE] : utilise du LaTeX standard, normalement — \\frac{}{} pour les fractions, \\sqrt{} pour les racines, _{} pour les indices, ^{} pour les exposants, \\Omega/\\pi/\\Delta/\\sum pour les symboles grecs et opérateurs. C'est rendu par un vrai moteur mathématique (MathJax), donc pas besoin de simplifier ou d'éviter ces commandes : écris la formule comme tu l'écrirais naturellement en LaTeX.
 - Notation d'incertitude : toujours "u(x)" avec de vraies parenthèses (jamais "u_x" en indice, qui se lirait comme une tout autre grandeur).
-- Ne jamais utiliser la notation de dérivée partielle (symbole ∂, commande \\partial), même comme étape intermédiaire ensuite "remplacée" : le programme de BTS CIEL n'aborde pas les dérivées partielles. Calcule le coefficient de sensibilité toi-même et écris directement la formule finale de propagation d'incertitude avec des variations Δ (ex: [FORMULE]\\Delta R_2 = \\frac{\\sqrt{2}}{2-\\sqrt{2}} \\Delta R_1[/FORMULE]) — le symbole ∂ ne doit apparaître nulle part, pas même dans une formule intermédiaire.
-- Incertitudes : pas plus d'UNE question ou courte série de questions sur le calcul d'incertitude dans tout le TP. Ne jamais demander l'incertitude sur chaque mesure effectuée — c'est un exercice ponctuel, pas une routine à répéter à chaque manipulation.
+- INTERDICTION ABSOLUE de la notation de dérivée partielle (symbole ∂, commande \\partial), y compris comme étape de calcul intermédiaire : le programme de BTS CIEL n'aborde pas les dérivées partielles, quelle que soit la formule concernée. Calcule toi-même le coefficient de sensibilité numérique ou symbolique et écris DIRECTEMENT la formule finale avec des variations Δ, sans jamais faire apparaître ∂ à aucune étape.
+  MAUVAIS (interdit, même si présenté comme "développé ensuite") : [FORMULE]u(U_2) = \\sqrt{(\\frac{\\partial U_2}{\\partial U_e} u(U_e))^2 + ...}[/FORMULE]
+  BON (attendu) : calcule directement les coefficients (ex: dérivée de U2 par rapport à chaque grandeur, mais SANS écrire ∂ nulle part) puis présente uniquement : [FORMULE]u(U_2) = \\sqrt{(k_1 \\, u(U_e))^2 + (k_2 \\, u(R_2))^2 + (k_3 \\, u(R_1))^2}[/FORMULE] où k_1, k_2, k_3 sont soit des valeurs numériques calculées, soit de courtes expressions symboliques déjà dérivées (jamais une notation ∂.../∂...).
+- ${incertitudeBlock}
 - EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
@@ -166,7 +179,7 @@ app.get("/api/status", (_req, res) => {
 const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
 
 app.post("/api/generate-tp", ipThrottle, async (req, res) => {
-  const { consigne, chapterId, duree, useStm32, image } = req.body || {};
+  const { consigne, chapterId, duree, useStm32, incertitude, image } = req.body || {};
 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
@@ -180,6 +193,9 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
   if (duree !== undefined && !["1h", "2h", "3h"].includes(duree)) {
     return res.status(400).json({ error: "invalid_input", message: "Durée invalide." });
   }
+  if (incertitude !== undefined && !["0", "1", "chaque"].includes(incertitude)) {
+    return res.status(400).json({ error: "invalid_input", message: "Réglage d'incertitude invalide." });
+  }
   if (image !== undefined && image !== null) {
     if (typeof image !== "string" || !/^data:image\/(png|jpe?g|webp);base64,/.test(image)) {
       return res.status(400).json({ error: "invalid_input", message: "Format d'image invalide." });
@@ -189,7 +205,7 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
     }
   }
 
-  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, image || null);
+  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null);
 
   const { promise, positionAtEnqueue } = enqueue(() =>
     generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
