@@ -76,7 +76,7 @@ setInterval(() => {
 setInterval(reloadContext, 5 * 60 * 1000).unref();
 
 // ---------- Construction du prompt ----------
-function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image) {
+function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image, history) {
   const { chapterSection, chapterList, examplesSection, structureTemplate, materiel, schemasSection } =
     buildContextBlock(chapterId);
 
@@ -138,6 +138,7 @@ ${incertitudeMethodBlock ? "- " + incertitudeMethodBlock : ""}
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
 - IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre du TP. Rien avant — ni commentaire, ni introduction, ni "Voici ton TP", ni ligne vide, ni signe de ponctuation isolé. Exemple de tout premier début de réponse : "Titre : Étude d'un filtre passe-bas du premier ordre".
 - Ta réponse ne contient QUE le TP lui-même, du titre jusqu'à la dernière question d'exploitation. N'ajoute aucun commentaire avant ou après (ex: pas de "N'hésite pas à demander de l'aide", pas de résumé final, pas de note personnelle) — rien que le contenu du TP.
+- Si l'élève demande une modification par rapport à un TP déjà généré plus haut dans cette conversation (ex: "refais la partie 2 différemment"), renvoie la VERSION COMPLÈTE et à jour du TP entier (du titre à la dernière question), pas seulement le fragment modifié — avec exactement les mêmes règles de mise en forme que pour une génération initiale (toujours commencer par "Titre : ", aucun commentaire).
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Les TP d'exemple du professeur fournis ci-dessous servent UNIQUEMENT à calibrer le niveau de difficulté et l'étendue de ce qui est attendu d'un élève de ce niveau — jamais leur mise en forme ni leur structure, qui ne doivent jamais être reproduites : la structure imposée ci-dessous prévaut toujours, quelle que soit celle des exemples.
 - Éviter de faire reposer le TP sur de longs calculs analytiques : privilégier la manipulation, l'observation et l'analyse conceptuelle des résultats. Des calculs simples et ponctuels sont bienvenus, pas des développements longs qui font perdre le fil de la manipulation.
@@ -169,8 +170,16 @@ ${examplesSection}`;
       ]
     : consigne;
 
+  // Historique de la conversation pour ce TP (demandes de correction
+  // ultérieures, session du 5 septembre 2026) : le système reconstruit ce
+  // même systemPrompt à chaque appel (déterministe à partir des mêmes
+  // chapterId/duree/useStm32/incertitude), donc il forme un préfixe identique
+  // d'une requête à l'autre — utile pour le cache automatique de Groq.
+  const priorMessages = Array.isArray(history) ? history : [];
+
   return [
     { role: "system", content: systemPrompt },
+    ...priorMessages,
     { role: "user", content: userContent },
   ];
 }
@@ -191,7 +200,7 @@ app.get("/api/status", (_req, res) => {
 const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
 
 app.post("/api/generate-tp", ipThrottle, async (req, res) => {
-  const { consigne, chapterId, duree, useStm32, incertitude, image } = req.body || {};
+  const { consigne, chapterId, duree, useStm32, incertitude, image, history } = req.body || {};
 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
@@ -216,8 +225,30 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
       return res.status(400).json({ error: "invalid_input", message: "Image trop lourde." });
     }
   }
+  // Historique de conversation (demande de correction d'un TP déjà généré) —
+  // pas de limite stricte sur le nombre d'échanges pour l'instant (décision
+  // du 5 septembre 2026, à revoir si l'usage réel pose problème), mais on
+  // valide quand même la forme pour éviter un payload absurde ou corrompu.
+  let validatedHistory;
+  if (history !== undefined && history !== null) {
+    if (!Array.isArray(history) || history.length > 60) {
+      return res.status(400).json({ error: "invalid_input", message: "Historique de conversation invalide." });
+    }
+    for (const msg of history) {
+      if (
+        !msg ||
+        typeof msg !== "object" ||
+        !["user", "assistant"].includes(msg.role) ||
+        typeof msg.content !== "string" ||
+        msg.content.length > 20000
+      ) {
+        return res.status(400).json({ error: "invalid_input", message: "Historique de conversation invalide." });
+      }
+    }
+    validatedHistory = history;
+  }
 
-  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null);
+  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null, validatedHistory);
 
   const { promise, positionAtEnqueue } = enqueue(() =>
     generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
