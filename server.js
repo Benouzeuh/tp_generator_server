@@ -96,15 +96,18 @@ ${schemasSection}`
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
-  // Conventions de rendu texte -> PDF : l'appli sait maintenant afficher un
-  // vrai indice compact (Us, R1...), le symbole Ω, et un encadré de mise en
-  // évidence pour les relations mathématiques, mais seulement si le modèle
-  // respecte ces quelques conventions à l'écriture (voir session du 5
-  // septembre 2026 avec Ben : corrections du moteur PDF de renderTpToPdf).
+  // Conventions de rendu texte -> PDF : depuis le passage à MathJax (session
+  // du 5 septembre 2026 avec Ben), tout ce qui est entre [FORMULE]...[/FORMULE]
+  // est rendu en vraie image mathématique à partir de LaTeX standard — plus
+  // besoin de bricoler la notation à l'intérieur d'une formule. En dehors des
+  // formules (texte courant), aucun moteur de rendu mathématique n'est
+  // disponible : la notation doit y rester simple (texte brut).
   const notationBlock = `Conventions de notation impératives dans le texte généré :
-- Indices de variables physiques : accole directement la lettre et l'indice, sans underscore ni accolade (écris "Us", "Ue", "R1", "R2", "Imax" — jamais "U_s", "R_1", "I_max", "U_{s}").
-- Unité de résistance : écris toujours le symbole "Ω" (jamais "Ohm" ni "ohm" en toutes lettres). Exemple : "10 kΩ", "220 Ω".
-- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne. Exemple : [FORMULE]Us = Ue . R2/(R1 + R2)[/FORMULE]. Ne mets jamais une formule au milieu d'une phrase ni entre symboles $ ou \\( \\).`;
+- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
+- À L'INTÉRIEUR d'un bloc [FORMULE]...[/FORMULE] : utilise du LaTeX standard, normalement — \\frac{}{} pour les fractions, \\sqrt{} pour les racines, _{} pour les indices, ^{} pour les exposants, \\Omega/\\pi/\\Delta/\\sum pour les symboles grecs et opérateurs. C'est rendu par un vrai moteur mathématique (MathJax), donc pas besoin de simplifier ou d'éviter ces commandes : écris la formule comme tu l'écrirais naturellement en LaTeX.
+- Notation d'incertitude : toujours "u(x)" avec de vraies parenthèses (jamais "u_x" en indice, qui se lirait comme une tout autre grandeur).
+- Ne jamais utiliser la notation de dérivée partielle (symbole ∂, commande \\partial) : le programme de BTS CIEL n'aborde pas les dérivées partielles. Pour la propagation des incertitudes, exprimer les relations avec des variations Δ (ex: Δf, ΔX) plutôt que des dérivées formelles.
+- EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
 
