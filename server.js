@@ -96,6 +96,16 @@ ${schemasSection}`
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
+  // Conventions de rendu texte -> PDF : l'appli sait maintenant afficher un
+  // vrai indice compact (Us, R1...), le symbole Ω, et un encadré de mise en
+  // évidence pour les relations mathématiques, mais seulement si le modèle
+  // respecte ces quelques conventions à l'écriture (voir session du 5
+  // septembre 2026 avec Ben : corrections du moteur PDF de renderTpToPdf).
+  const notationBlock = `Conventions de notation impératives dans le texte généré :
+- Indices de variables physiques : accole directement la lettre et l'indice, sans underscore ni accolade (écris "Us", "Ue", "R1", "R2", "Imax" — jamais "U_s", "R_1", "I_max", "U_{s}").
+- Unité de résistance : écris toujours le symbole "Ω" (jamais "Ohm" ni "ohm" en toutes lettres). Exemple : "10 kΩ", "220 Ω".
+- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne. Exemple : [FORMULE]Us = Ue . R2/(R1 + R2)[/FORMULE]. Ne mets jamais une formule au milieu d'une phrase ni entre symboles $ ou \\( \\).`;
+
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
 
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
@@ -106,6 +116,8 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - ${dureeBlock}
 ${stm32Block ? "- " + stm32Block : ""}
 ${imageBlock ? "- " + imageBlock : ""}
+
+${notationBlock}
 
 ${structureTemplate}
 
