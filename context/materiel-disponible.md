@@ -25,10 +25,21 @@
   (obligatoire pour les montages avec modules Grove).
 - Codage possible sous IDE Arduino, aussi bien sur cartes Arduino que sur la
   STM32 Nucleo.
+- **Important** : la STM32 ne doit être proposée que si elle est réellement
+  codée pour remplir une fonction utile au TP (acquisition de données,
+  génération d'un signal, traitement embarqué, communication, asservissement,
+  affichage...) — jamais comme simple substitut d'un appareil de mesure déjà
+  disponible (ex : ne pas la faire jouer le rôle d'un oscilloscope, d'un GBF
+  ou d'un multimètre alors que ces appareils sont déjà dans la salle). Si son
+  usage n'apporte rien de plus que l'appareil dédié, ne pas l'inclure.
 
 ## Appareils de mesure
 
-- Oscilloscope.
+- Oscilloscope : considérer qu'il sait faire tout ce qu'un oscilloscope
+  classique sait faire en dessous de 10 MHz (mesures temporelles, mode XY,
+  curseurs, moyennage...), y compris sa **fonction FFT** pour l'analyse
+  spectrale d'un signal. Ne pas inventer de limitation de l'oscilloscope
+  au-delà de ce qui est listé ici sans raison précise liée à la consigne.
 - Générateur basse fréquence (GBF).
 - Multimètre.
 - Carte Waveforms (boîtier de mesure/génération USB) — uniquement si nécessaire,
@@ -100,4 +111,3 @@
 Consigne pour l'IA : le matériel proposé dans un TP doit être choisi dans cette
 liste en priorité. S'écarter de cette liste uniquement si l'élève demande
 explicitement un composant ou un appareil précis non listé ici.
-
