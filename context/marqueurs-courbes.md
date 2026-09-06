@@ -103,3 +103,30 @@ graduations des constellations sont automatiquement forcées sur des entiers.
 N'invente jamais un type ou un paramètre absent de cette liste ; si la courbe dont
 tu as besoin ne correspond à aucun type disponible, décris-la en mots à la place
 (jamais en ASCII-art).
+
+## Utilise activement ces courbes — ne t'en passe pas par défaut
+
+Ces courbes sont calculées et donc TOUJOURS visuellement justes (contrairement à une
+description en mots ou à un schéma statique) — pour les chapitres ci-dessous, une
+courbe calculée est presque toujours PLUS PERTINENTE qu'un exercice ou qu'un TP
+purement textuel/calculatoire, et doit être utilisée par défaut, pas seulement "si
+ça s'y prête" :
+- ch3 (signaux périodiques) → `sinusoide`, `signal-paliers`, `dtmf` (et leurs
+  spectres) : tout exercice/TP sur la valeur moyenne, efficace, la période, le
+  déphasage d'un signal réel devrait présenter ce signal via une courbe.
+- ch5 (analyse fréquentielle) → `spectre-sinusoide`, `spectre-signal-paliers`.
+- ch7 (transmittance isochrone) → `bode-1er-ordre`, `bode-2e-ordre`, `module-h`.
+- ch8 (diagramme de Bode) → `bode-1er-ordre`, `bode-2e-ordre` — OBLIGATOIRE,
+  jamais un exercice/TP sur ce chapitre sans diagramme de Bode affiché.
+- ch9 (synthèse de filtre) → `gabarit` — la notion centrale du chapitre, à
+  présenter visuellement plutôt qu'en mots à chaque fois que c'est pertinent.
+- ch13 (amplification, comparateurs) → `hysteresis` pour tout exercice/TP sur
+  un trigger de Schmitt.
+- ch16 (filtrage numérique) → `bode-numerique`.
+- ch17 (codage en bande de base) → `code-ligne` pour tout exercice/TP demandant
+  de tracer, lire ou comparer un chronogramme de codage.
+- ch19 (transmission par fréquence porteuse) → `ask`/`psk`/`fsk`/`qam` et leurs
+  constellations — dès qu'une modulation numérique est abordée.
+
+Pour les autres chapitres, une courbe n'est pertinente que ponctuellement — ne
+force jamais une courbe hors sujet juste pour en placer une.
