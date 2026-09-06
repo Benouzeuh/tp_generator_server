@@ -77,6 +77,19 @@ setInterval(reloadContext, 5 * 60 * 1000).unref();
 
 // ---------- Blocs de prompt partagés entre TP et exercices ----------
 
+// Consigne de niveau, partagée entre TP et exercices (demande explicite de
+// Ben, session du 5 septembre 2026) : cadre les outils mathématiques
+// autorisés en BTS, quel que soit le chapitre — certains chapitres précisent
+// déjà des limites plus fines dans leur résumé, mais ce rappel général évite
+// tout dérapage vers un niveau prépa/licence par défaut.
+function buildNiveauBlock() {
+  return `Niveau attendu : BTS, jamais plus. Sauf si le résumé du chapitre l'autorise explicitement pour un point précis, NE JAMAIS faire intervenir :
+- un calcul de dérivée ou d'intégrale à réaliser PAR L'ÉLÈVE (les résultats de ce type de calcul, s'ils sont nécessaires, sont à donner directement dans l'énoncé ou le Document, jamais à établir) ;
+- une résolution d'équation différentielle (même logique : donner la solution si elle sert à la suite, ne jamais la demander) ;
+- un calcul compliqué de module et d'argument d'un nombre complexe (racine carrée de somme de carrés, arctan...) — rester sur des cas simples (complexe réel pur, imaginaire pur, ou déjà sous forme module/argument) ou donner le résultat directement si le calcul n'est pas l'objectif pédagogique de la question.
+Toujours ancrer la situation dans un contexte crédible et concret (application réelle, objet du quotidien, système industriel, dispositif médical...), jamais un montage abstrait présenté "hors sol" sans justification d'usage.`;
+}
+
 function buildSchemasBlock(schemasSection) {
   return schemasSection
     ? `Banque de schémas électriques disponibles — quand un Document utile a besoin d'un schéma de montage, choisis celui qui correspond le mieux dans cette liste et insère UNIQUEMENT le marqueur "[SCHEMA:identifiant]" à cet endroit (rien d'autre autour, pas de description du schéma en plus) ; si aucun ne correspond, décris le montage en mots comme indiqué plus haut, n'invente jamais d'identifiant absent de cette liste :
@@ -142,6 +155,7 @@ function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image,
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
+  const niveauBlock = buildNiveauBlock();
   const notationBlock = buildNotationBlock(incertitude, {
     uniteLabel: "mesure",
     ou: "dans le TP",
@@ -161,6 +175,8 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - ${dureeBlock}
 ${stm32Block ? "- " + stm32Block : ""}
 ${imageBlock ? "- " + imageBlock : ""}
+
+${niveauBlock}
 
 ${notationBlock}
 
@@ -218,6 +234,7 @@ function buildExerciceMessages(consigne, chapterId, nombreExercices, incertitude
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire l'exercice : si elle montre un composant ou montage précis, base l'exercice dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
+  const niveauBlock = buildNiveauBlock();
   const notationBlock = buildNotationBlock(incertitude, {
     uniteLabel: "question de calcul",
     ou: "dans les Questions",
@@ -234,6 +251,8 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Registre neutre, académique, adapté à un élève de BTS.
 ${imageBlock ? "- " + imageBlock : ""}
+
+${niveauBlock}
 
 ${notationBlock}
 
@@ -318,6 +337,12 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
   if (chapterId !== undefined && chapterId !== null && !/^ch[0-9]+$/.test(chapterId)) {
     return res.status(400).json({ error: "invalid_input", message: "Identifiant de chapitre invalide." });
   }
+  // Chapitre obligatoire (demande explicite de Ben, session du 5 septembre
+  // 2026) : sans lui, l'IA générait "dans le vide", avec sa seule
+  // connaissance générale et aucun repère sur le cours réellement enseigné.
+  if (!chapterId) {
+    return res.status(400).json({ error: "invalid_input", message: "Chapitre manquant — indispensable pour générer un TP cohérent avec le cours." });
+  }
   if (duree !== undefined && !["1h", "2h", "3h"].includes(duree)) {
     return res.status(400).json({ error: "invalid_input", message: "Durée invalide." });
   }
@@ -379,6 +404,9 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
   }
   if (chapterId !== undefined && chapterId !== null && !/^ch[0-9]+$/.test(chapterId)) {
     return res.status(400).json({ error: "invalid_input", message: "Identifiant de chapitre invalide." });
+  }
+  if (!chapterId) {
+    return res.status(400).json({ error: "invalid_input", message: "Chapitre manquant — indispensable pour générer un exercice cohérent avec le cours." });
   }
   if (nombreExercices !== undefined && ![1, 3, 5].includes(Number(nombreExercices))) {
     return res.status(400).json({ error: "invalid_input", message: "Nombre d'exercices invalide." });
