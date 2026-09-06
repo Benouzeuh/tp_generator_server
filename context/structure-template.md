@@ -26,11 +26,14 @@ contenu s'adapte à la consigne, jamais l'ordre ni la présence de ces blocs.
    autres Documents utiles en bloc au début, pas à côté de la partie qui s'en
    sert.
 
-   **Un Document ne peut contenir QUE l'un des quatre éléments suivants — jamais
+   **Un Document ne peut contenir QUE l'un des cinq éléments suivants — jamais
    autre chose** :
    - une image fournie par l'application via le marqueur [SCHEMA:identifiant]
      (schéma électrique d'un montage, courbe/graphe, brochage d'un composant
      comme la STM32...) ;
+   - une courbe CALCULÉE via le marqueur [COURBE:...] (voir la liste
+     des types disponibles fournie séparément) — toujours préférable à décrire une courbe en mots
+     quand la situation correspond à l'un des types disponibles ;
    - une formule générale de cours (fonction de transfert, loi physique,
      définition), donnée telle quelle, SANS l'appliquer aux grandeurs
      particulières du montage ;
