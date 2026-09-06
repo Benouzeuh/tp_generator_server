@@ -75,15 +75,61 @@ setInterval(() => {
 // Recharge périodique du contexte (TP d'exemple ajoutés récemment) sans redéploiement.
 setInterval(reloadContext, 5 * 60 * 1000).unref();
 
-// ---------- Construction du prompt ----------
-function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image, history) {
-  const { chapterSection, chapterList, examplesSection, structureTemplate, materiel, schemasSection } =
-    buildContextBlock(chapterId);
+// ---------- Blocs de prompt partagés entre TP et exercices ----------
 
-  const schemasBlock = schemasSection
+function buildSchemasBlock(schemasSection) {
+  return schemasSection
     ? `Banque de schémas électriques disponibles — quand un Document utile a besoin d'un schéma de montage, choisis celui qui correspond le mieux dans cette liste et insère UNIQUEMENT le marqueur "[SCHEMA:identifiant]" à cet endroit (rien d'autre autour, pas de description du schéma en plus) ; si aucun ne correspond, décris le montage en mots comme indiqué plus haut, n'invente jamais d'identifiant absent de cette liste :
 ${schemasSection}`
     : `Aucun schéma électrique n'est disponible dans la banque pour l'instant — décris toujours les montages en mots (jamais en ASCII-art), comme indiqué plus haut.`;
+}
+
+// Réglage "Calcul d'incertitude" choisi dans l'appli (menu déroulant, partagé
+// entre TP et exercices) : 0 = aucun, 1 = un seul (défaut), "chaque" = à
+// chaque mesure/question de calcul.
+function buildIncertitudeBlocks(incertitude, uniteLabel) {
+  const setting = incertitude === "0" || incertitude === "chaque" ? incertitude : "1";
+  const countBlock =
+    setting === "0"
+      ? `Incertitudes : n'inclus AUCUN calcul ni question d'incertitude, même en fin d'exercice.`
+      : setting === "chaque"
+      ? `Incertitudes : calcule/demande l'incertitude sur chaque ${uniteLabel} importante (une question dédiée à chaque fois), pas seulement une fois.`
+      : `Incertitudes : pas plus d'UNE question ou courte série de questions sur le calcul d'incertitude au total. Ne jamais la demander sur chaque ${uniteLabel} — c'est un exercice ponctuel, pas une routine à répéter.`;
+  const methodBlock =
+    setting === "0"
+      ? ""
+      : `Méthode de calcul d'incertitude — IMPÉRATIF, une seule méthode autorisée en BTS CIEL : la quadrature des incertitudes RELATIVES, valable pour toute grandeur qui s'écrit comme un produit/quotient de puissances des grandeurs mesurées (ex: Rx = R1 . (Ue - Us) / Us). Pour une grandeur G = X1^a1 . X2^a2 . ... (les a_i pouvant être 1, -1, 2...), la formule à utiliser SYSTÉMATIQUEMENT est :
+  [FORMULE]\\frac{u(G)}{G} = \\sqrt{\\left(a_1\\frac{u(X_1)}{X_1}\\right)^2 + \\left(a_2\\frac{u(X_2)}{X_2}\\right)^2 + ...}[/FORMULE]
+  N'utilise JAMAIS de propagation par dérivées (partielles ou non), de coefficients de sensibilité calculés, ni aucune autre méthode — même simplifiée ou présentée différemment. Si la grandeur étudiée n'est pas un produit/quotient de puissances des grandeurs mesurées (somme, différence isolée, fonction non polynomiale...), NE PROPOSE PAS de question de calcul d'incertitude dessus plutôt que d'improviser une autre méthode.
+  Dans un Document théorique fourni au début (rappel de cours) : rappelle UNIQUEMENT cette formule générale telle quelle, SANS l'appliquer ni l'adapter aux grandeurs particulières du cas traité à ce stade — l'application numérique se fait uniquement dans la question dédiée décrite ci-dessus.`;
+  return { setting, countBlock, methodBlock };
+}
+
+// Conventions de rendu texte -> PDF (MathJax pour les formules) : partagées
+// telles quelles entre TP et exercices. `reponseContext` adapte juste le
+// vocabulaire de la règle "ne réponds jamais à une question" selon qu'on est
+// dans un TP (Manipulation/Exploitation) ou un exercice (Questions/Corrigé).
+function buildNotationBlock(incertitude, reponseContext) {
+  const { countBlock, methodBlock } = buildIncertitudeBlocks(incertitude, reponseContext.uniteLabel);
+  return `Conventions de notation impératives dans le texte généré :
+- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne — SANS EXCEPTION, y compris pour une formule courte type "f = 1/T" ou "Ueff = Umax". Une formule laissée sans ce marqueur reste du texte brut illisible (ex: "racine((1)/(T)...)") au lieu d'un vrai rendu mathématique. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
+- À L'INTÉRIEUR d'un bloc [FORMULE]...[/FORMULE] : utilise du LaTeX standard, normalement — \\frac{}{} pour les fractions, \\sqrt{} pour les racines, _{} pour les indices, ^{} pour les exposants, \\Omega/\\pi/\\Delta/\\sum pour les symboles grecs et opérateurs. C'est rendu par un vrai moteur mathématique (MathJax), donc pas besoin de simplifier ou d'éviter ces commandes : écris la formule comme tu l'écrirais naturellement en LaTeX.
+- Notation d'incertitude : toujours "u(x)" avec de vraies parenthèses (jamais "u_x" en indice, qui se lirait comme une tout autre grandeur).
+- ${countBlock}
+${methodBlock ? "- " + methodBlock : ""}
+- Ne réponds JAMAIS à une question que tu poses toi-même ${reponseContext.ou} : ${reponseContext.regle}
+  MAUVAIS (interdit) : "2. Calculer la résistance de limitation R_LED nécessaire :" suivi immédiatement de [FORMULE]R_{LED} = \\frac{U_e - U_f}{I}[/FORMULE] — ceci EST la réponse à la question posée, donnée avant que l'élève ait cherché.
+  BON (attendu) : soit ne rien mettre après la question (l'élève établit lui-même l'expression à partir de la loi d'Ohm/des lois de circuit déjà connues du cours), soit reformuler la question pour qu'elle porte sur autre chose que l'obtention de cette expression (ex: une fois l'expression établie PAR L'ÉLÈVE, lui demander de l'appliquer numériquement).
+  Les formules données dans un Document théorique (rappels de cours généraux, lois, relations non spécifiques au cas traité) restent normales : la règle interdit uniquement de donner la réponse littérale à une question juste après l'avoir posée.
+- EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
+}
+
+// ---------- Construction du prompt : TP ----------
+function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image, history) {
+  const { chapterSection, chapterList, examplesSection, structureTemplate, courbesMarkdown, materiel, schemasSection } =
+    buildContextBlock(chapterId);
+
+  const schemasBlock = buildSchemasBlock(schemasSection);
 
   const dureeLabel = duree || "2h";
   const dureeBlock = `Durée de séance visée : ${dureeLabel}. Dimensionne le nombre et la profondeur des manipulations en conséquence : un TP de 1h doit être sensiblement plus court/ciblé qu'un TP de 3h (moins de parties, moins de mesures répétées), ne mets pas artificiellement le même contenu quelle que soit la durée.`;
@@ -96,42 +142,11 @@ ${schemasSection}`
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
 
-  // Réglage "Calcul d'incertitude" choisi par le professeur dans l'appli
-  // (menu déroulant de l'onglet Création, session du 5 septembre 2026) :
-  // 0 = aucun, 1 = un seul dans tout le TP (défaut), "chaque" = à chaque mesure.
-  const incertitudeSetting = incertitude === "0" || incertitude === "chaque" ? incertitude : "1";
-  const incertitudeCountBlock =
-    incertitudeSetting === "0"
-      ? `Incertitudes : n'inclus AUCUN calcul ni question d'incertitude dans ce TP, même en fin de partie.`
-      : incertitudeSetting === "chaque"
-      ? `Incertitudes : calcule/demande l'incertitude sur chaque mesure importante du TP (une question dédiée par mesure ou par série de mesures), pas seulement une fois.`
-      : `Incertitudes : pas plus d'UNE question ou courte série de questions sur le calcul d'incertitude dans tout le TP. Ne jamais demander l'incertitude sur chaque mesure effectuée — c'est un exercice ponctuel, pas une routine à répéter à chaque manipulation.`;
-
-  // Méthode de calcul d'incertitude imposée (demande explicite de Ben,
-  // session du 5 septembre 2026) : uniquement la quadrature des incertitudes
-  // relatives, jamais une propagation par dérivées (partielles ou non).
-  const incertitudeMethodBlock = incertitudeSetting === "0" ? "" : `Méthode de calcul d'incertitude — IMPÉRATIF, une seule méthode autorisée en BTS CIEL : la quadrature des incertitudes RELATIVES, valable pour toute grandeur qui s'écrit comme un produit/quotient de puissances des grandeurs mesurées (ex: Rx = R1 . (Ue - Us) / Us). Pour une grandeur G = X1^a1 . X2^a2 . ... (les a_i pouvant être 1, -1, 2...), la formule à utiliser SYSTÉMATIQUEMENT est :
-  [FORMULE]\\frac{u(G)}{G} = \\sqrt{\\left(a_1\\frac{u(X_1)}{X_1}\\right)^2 + \\left(a_2\\frac{u(X_2)}{X_2}\\right)^2 + ...}[/FORMULE]
-  N'utilise JAMAIS de propagation par dérivées (partielles ou non), de coefficients de sensibilité calculés, ni aucune autre méthode — même simplifiée ou présentée différemment. Si la grandeur étudiée n'est pas un produit/quotient de puissances des grandeurs mesurées (somme, différence isolée, fonction non polynomiale...), NE PROPOSE PAS de question de calcul d'incertitude dessus plutôt que d'improviser une autre méthode.
-  Dans un Document théorique fourni en début de TP (rappel de cours) : rappelle UNIQUEMENT cette formule générale telle quelle, SANS l'appliquer ni l'adapter aux grandeurs particulières du montage à ce stade (pas de version réécrite avec les noms des grandeurs de ce TP) — l'application numérique avec les vraies grandeurs se fait uniquement dans la question d'exploitation dédiée décrite ci-dessus.`;
-
-  // Conventions de rendu texte -> PDF : depuis le passage à MathJax (session
-  // du 5 septembre 2026 avec Ben), tout ce qui est entre [FORMULE]...[/FORMULE]
-  // est rendu en vraie image mathématique à partir de LaTeX standard — plus
-  // besoin de bricoler la notation à l'intérieur d'une formule. En dehors des
-  // formules (texte courant), aucun moteur de rendu mathématique n'est
-  // disponible : la notation doit y rester simple (texte brut).
-  const notationBlock = `Conventions de notation impératives dans le texte généré :
-- Toute relation mathématique (formule, fonction de transfert, calcul d'incertitude, application numérique...) doit être isolée sur sa propre ligne, entourée du marqueur [FORMULE] au début et [/FORMULE] à la fin, rien d'autre sur cette ligne — SANS EXCEPTION, y compris pour une formule courte type "f = 1/T" ou "Ueff = Umax". Une formule laissée sans ce marqueur reste du texte brut illisible (ex: "racine((1)/(T)...)") au lieu d'un vrai rendu mathématique. Exemple : [FORMULE]U_s = U_e \\cdot \\frac{R_2}{R_1 + R_2}[/FORMULE].
-- À L'INTÉRIEUR d'un bloc [FORMULE]...[/FORMULE] : utilise du LaTeX standard, normalement — \\frac{}{} pour les fractions, \\sqrt{} pour les racines, _{} pour les indices, ^{} pour les exposants, \\Omega/\\pi/\\Delta/\\sum pour les symboles grecs et opérateurs. C'est rendu par un vrai moteur mathématique (MathJax), donc pas besoin de simplifier ou d'éviter ces commandes : écris la formule comme tu l'écrirais naturellement en LaTeX.
-- Notation d'incertitude : toujours "u(x)" avec de vraies parenthèses (jamais "u_x" en indice, qui se lirait comme une tout autre grandeur).
-- ${incertitudeCountBlock}
-${incertitudeMethodBlock ? "- " + incertitudeMethodBlock : ""}
-- Ne réponds JAMAIS à une question que tu poses toi-même dans le TP : une question de manipulation ou d'exploitation doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue (ça retire tout l'intérêt pédagogique) — même sous forme de "formule à utiliser" présentée juste après la question comme si c'était une aide neutre : si cette formule EST la réponse demandée (l'expression littérale qu'on demande d'établir), c'est interdit.
-  MAUVAIS (interdit) : "2. Calculer la résistance de limitation R_LED nécessaire :" suivi immédiatement de [FORMULE]R_{LED} = \\frac{U_e - U_f}{I}[/FORMULE] — ceci EST la réponse à la question posée, donnée avant que l'élève ait cherché.
-  BON (attendu) : soit ne rien mettre après la question (l'élève établit lui-même l'expression à partir de la loi d'Ohm/des lois de circuit déjà connues du cours), soit reformuler la question pour qu'elle porte sur autre chose que l'obtention de cette expression (ex: une fois l'expression établie PAR L'ÉLÈVE, lui demander de l'appliquer numériquement).
-  Les formules données dans un Document théorique (rappels de cours généraux, lois, relations non spécifiques à ce montage) restent normales : la règle interdit uniquement de donner la réponse littérale à une question d'exploitation/manipulation juste après l'avoir posée.
-- EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
+  const notationBlock = buildNotationBlock(incertitude, {
+    uniteLabel: "mesure",
+    ou: "dans le TP",
+    regle: "une question de manipulation ou d'exploitation doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue (ça retire tout l'intérêt pédagogique) — même sous forme de \"formule à utiliser\" présentée juste après la question comme si c'était une aide neutre : si cette formule EST la réponse demandée (l'expression littérale qu'on demande d'établir), c'est interdit.",
+  });
 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
 
@@ -150,6 +165,8 @@ ${imageBlock ? "- " + imageBlock : ""}
 ${notationBlock}
 
 ${structureTemplate}
+
+${courbesMarkdown}
 
 Matériel réellement disponible en salle — le matériel proposé dans le TP (section "Matériel" et schémas) doit être choisi dans cette liste en priorité ; ne pas inventer de référence ou de valeur absente de cette liste, sauf si l'élève en demande explicitement une précise :
 ${materiel}
@@ -184,6 +201,72 @@ ${examplesSection}`;
   ];
 }
 
+// ---------- Construction du prompt : Exercice ----------
+function buildExerciceMessages(consigne, chapterId, nombreExercices, incertitude, image, history) {
+  const { chapterSection, chapterList, exercisesExamplesSection, structureTemplateExercice, courbesMarkdown, schemasSection } =
+    buildContextBlock(chapterId);
+
+  const schemasBlock = buildSchemasBlock(schemasSection);
+
+  const nombre = [1, 3, 5].includes(nombreExercices) ? nombreExercices : 1;
+  const nombreBlock =
+    nombre === 1
+      ? `Génère UN SEUL exercice.`
+      : `Génère EXACTEMENT ${nombre} exercices distincts et indépendants (des situations différentes, pas des variations mineures du même montage), chacun avec sa propre structure complète (Titre, Documents utiles éventuels, Énoncé, Questions, Corrigé). Chaque exercice commence par sa propre ligne "Titre : Exercice N — <titre spécifique>" (ex: "Titre : Exercice 2 — Décharge d'un condensateur"), en réutilisant exactement la même convention "Titre :" — jamais un autre type de label pour les numéroter.`;
+
+  const imageBlock = image
+    ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire l'exercice : si elle montre un composant ou montage précis, base l'exercice dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
+    : "";
+
+  const notationBlock = buildNotationBlock(incertitude, {
+    uniteLabel: "question de calcul",
+    ou: "dans les Questions",
+    regle: "une question doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue — même sous forme de \"formule à utiliser\" présentée comme une aide neutre : si cette formule EST la réponse demandée, c'est interdit. Cette règle ne s'applique QU'À la section Questions : le Corrigé, lui, doit au contraire répondre complètement à chaque question, en détail, avec le raisonnement et les applications numériques.",
+  });
+
+  const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à s'entraîner en générant un exercice de physique appliquée à résoudre sur le papier, à partir d'une consigne qu'ils te donnent. Contrairement à un TP, il n'y a pas de matériel physique ni de manipulation — c'est un problème avec un corrigé détaillé fourni à la fin, que l'élève peut consulter pour se corriger après avoir cherché.
+
+Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
+- IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre de l'exercice (si plusieurs exercices sont demandés, le premier commence par "Titre : Exercice 1 — <titre>"). Rien avant — ni commentaire, ni introduction, ni ligne vide.
+- Ta réponse ne contient QUE l'exercice (ou les exercices) lui-même, du titre jusqu'au dernier Corrigé. N'ajoute aucun commentaire avant ou après.
+- Si l'élève demande une modification par rapport à un exercice déjà généré plus haut dans cette conversation, renvoie la VERSION COMPLÈTE et à jour (tous les exercices, du titre au dernier Corrigé), pas seulement le fragment modifié.
+- ${nombreBlock}
+- Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
+- Registre neutre, académique, adapté à un élève de BTS.
+${imageBlock ? "- " + imageBlock : ""}
+
+${notationBlock}
+
+${structureTemplateExercice}
+
+${courbesMarkdown}
+
+${schemasBlock}
+
+${chapterSection}
+
+Liste complète des chapitres du programme (pour te situer si l'élève ne précise pas de chapitre, ou mentionne un autre chapitre que celui indiqué) :
+${chapterList}
+
+Exercices déjà présents dans le cours de ce chapitre — servent UNIQUEMENT à calibrer le niveau de difficulté et le style de question attendu à ce niveau, jamais à être recopiés ni reformulés à l'identique : génère toujours une situation différente (autres valeurs, autre contexte), jamais une simple reformulation de l'un de ces exemples :
+${exercisesExamplesSection}`;
+
+  const userContent = image
+    ? [
+        { type: "text", text: consigne },
+        { type: "image_url", image_url: { url: image } },
+      ]
+    : consigne;
+
+  const priorMessages = Array.isArray(history) ? history : [];
+
+  return [
+    { role: "system", content: systemPrompt },
+    ...priorMessages,
+    { role: "user", content: userContent },
+  ];
+}
+
 // ---------- Endpoints ----------
 
 app.get("/", (_req, res) => {
@@ -198,6 +281,30 @@ app.get("/api/status", (_req, res) => {
 // (les tokens image comptent aussi) — 4 Mo de base64 correspond à une image déjà
 // bien compressée côté client (voir app.js, qui redimensionne avant envoi).
 const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
+
+// Historique de conversation (demande de correction d'un TP/exercice déjà
+// généré) — pas de limite stricte sur le nombre d'échanges pour l'instant
+// (décision du 5 septembre 2026, à revoir si l'usage réel pose problème),
+// mais on valide quand même la forme pour éviter un payload absurde/corrompu.
+// Renvoie { ok:true, value } ou { ok:false, message }.
+function validateHistory(history) {
+  if (history === undefined || history === null) return { ok: true, value: undefined };
+  if (!Array.isArray(history) || history.length > 60) {
+    return { ok: false, message: "Historique de conversation invalide." };
+  }
+  for (const msg of history) {
+    if (
+      !msg ||
+      typeof msg !== "object" ||
+      !["user", "assistant"].includes(msg.role) ||
+      typeof msg.content !== "string" ||
+      msg.content.length > 20000
+    ) {
+      return { ok: false, message: "Historique de conversation invalide." };
+    }
+  }
+  return { ok: true, value: history };
+}
 
 app.post("/api/generate-tp", ipThrottle, async (req, res) => {
   const { consigne, chapterId, duree, useStm32, incertitude, image, history } = req.body || {};
@@ -225,30 +332,12 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
       return res.status(400).json({ error: "invalid_input", message: "Image trop lourde." });
     }
   }
-  // Historique de conversation (demande de correction d'un TP déjà généré) —
-  // pas de limite stricte sur le nombre d'échanges pour l'instant (décision
-  // du 5 septembre 2026, à revoir si l'usage réel pose problème), mais on
-  // valide quand même la forme pour éviter un payload absurde ou corrompu.
-  let validatedHistory;
-  if (history !== undefined && history !== null) {
-    if (!Array.isArray(history) || history.length > 60) {
-      return res.status(400).json({ error: "invalid_input", message: "Historique de conversation invalide." });
-    }
-    for (const msg of history) {
-      if (
-        !msg ||
-        typeof msg !== "object" ||
-        !["user", "assistant"].includes(msg.role) ||
-        typeof msg.content !== "string" ||
-        msg.content.length > 20000
-      ) {
-        return res.status(400).json({ error: "invalid_input", message: "Historique de conversation invalide." });
-      }
-    }
-    validatedHistory = history;
+  const historyCheck = validateHistory(history);
+  if (!historyCheck.ok) {
+    return res.status(400).json({ error: "invalid_input", message: historyCheck.message });
   }
 
-  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null, validatedHistory);
+  const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null, historyCheck.value);
 
   const { promise, positionAtEnqueue } = enqueue(() =>
     generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
@@ -275,6 +364,73 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
     return res.json({ tp: result.text, provider: result.provider });
   } catch (err) {
     console.error("[generate-tp] erreur inattendue:", err);
+    return res.status(500).json({ error: "internal_error", message: "Erreur inattendue du serveur." });
+  }
+});
+
+app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
+  const { consigne, chapterId, nombreExercices, incertitude, image, history } = req.body || {};
+
+  if (typeof consigne !== "string" || consigne.trim().length < 5) {
+    return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
+  }
+  if (consigne.length > 2000) {
+    return res.status(400).json({ error: "invalid_input", message: "Consigne trop longue (2000 caractères max)." });
+  }
+  if (chapterId !== undefined && chapterId !== null && !/^ch[0-9]+$/.test(chapterId)) {
+    return res.status(400).json({ error: "invalid_input", message: "Identifiant de chapitre invalide." });
+  }
+  if (nombreExercices !== undefined && ![1, 3, 5].includes(Number(nombreExercices))) {
+    return res.status(400).json({ error: "invalid_input", message: "Nombre d'exercices invalide." });
+  }
+  if (incertitude !== undefined && !["0", "1", "chaque"].includes(incertitude)) {
+    return res.status(400).json({ error: "invalid_input", message: "Réglage d'incertitude invalide." });
+  }
+  if (image !== undefined && image !== null) {
+    if (typeof image !== "string" || !/^data:image\/(png|jpe?g|webp);base64,/.test(image)) {
+      return res.status(400).json({ error: "invalid_input", message: "Format d'image invalide." });
+    }
+    if (image.length > MAX_IMAGE_BASE64_CHARS) {
+      return res.status(400).json({ error: "invalid_input", message: "Image trop lourde." });
+    }
+  }
+  const historyCheck = validateHistory(history);
+  if (!historyCheck.ok) {
+    return res.status(400).json({ error: "invalid_input", message: historyCheck.message });
+  }
+
+  const messages = buildExerciceMessages(
+    consigne.trim(),
+    chapterId || null,
+    Number(nombreExercices) || 1,
+    incertitude || "1",
+    image || null,
+    historyCheck.value
+  );
+
+  const { promise, positionAtEnqueue } = enqueue(() =>
+    generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
+  );
+
+  res.setHeader("X-Queue-Position", String(positionAtEnqueue));
+
+  try {
+    const result = await promise;
+    if (!result.ok) {
+      const status = result.error === "rate_limited" ? 503 : 502;
+      console.error("[generate-exercice] échec des deux fournisseurs:", JSON.stringify(result.attempts));
+      return res.status(status).json({
+        error: result.error || "generation_failed",
+        message:
+          result.error === "missing_api_key"
+            ? "Le serveur n'est pas encore configuré (clé API manquante)."
+            : "Les deux fournisseurs IA sont indisponibles pour l'instant, réessaie dans un instant.",
+        debug: result.attempts,
+      });
+    }
+    return res.json({ tp: result.text, provider: result.provider });
+  } catch (err) {
+    console.error("[generate-exercice] erreur inattendue:", err);
     return res.status(500).json({ error: "internal_error", message: "Erreur inattendue du serveur." });
   }
 });
