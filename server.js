@@ -218,7 +218,7 @@ ${examplesSection}`;
 }
 
 // ---------- Construction du prompt : Exercice ----------
-function buildExerciceMessages(consigne, chapterId, nombreExercices, incertitude, image, history) {
+function buildExerciceMessages(consigne, chapterId, nombreExercices, image, history) {
   const { chapterSection, chapterList, exercisesExamplesSection, structureTemplateExercice, courbesMarkdown, schemasSection } =
     buildContextBlock(chapterId);
 
@@ -235,7 +235,10 @@ function buildExerciceMessages(consigne, chapterId, nombreExercices, incertitude
     : "";
 
   const niveauBlock = buildNiveauBlock();
-  const notationBlock = buildNotationBlock(incertitude, {
+  // Incertitude : TOUJOURS désactivée pour les exercices (demande explicite
+  // de Ben, session du 5 septembre 2026) — contrairement au TP, pas de menu
+  // au choix ici, "0" est forcé quoi qu'il arrive.
+  const notationBlock = buildNotationBlock("0", {
     uniteLabel: "question de calcul",
     ou: "dans les Questions",
     regle: "une question doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue — même sous forme de \"formule à utiliser\" présentée comme une aide neutre : si cette formule EST la réponse demandée, c'est interdit. Cette règle ne s'applique QU'À la section Questions : le Corrigé, lui, doit au contraire répondre complètement à chaque question, en détail, avec le raisonnement et les applications numériques.",
@@ -394,7 +397,7 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
 });
 
 app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
-  const { consigne, chapterId, nombreExercices, incertitude, image, history } = req.body || {};
+  const { consigne, chapterId, nombreExercices, image, history } = req.body || {};
 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
@@ -410,9 +413,6 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
   }
   if (nombreExercices !== undefined && ![1, 3, 5].includes(Number(nombreExercices))) {
     return res.status(400).json({ error: "invalid_input", message: "Nombre d'exercices invalide." });
-  }
-  if (incertitude !== undefined && !["0", "1", "chaque"].includes(incertitude)) {
-    return res.status(400).json({ error: "invalid_input", message: "Réglage d'incertitude invalide." });
   }
   if (image !== undefined && image !== null) {
     if (typeof image !== "string" || !/^data:image\/(png|jpe?g|webp);base64,/.test(image)) {
@@ -431,7 +431,6 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
     consigne.trim(),
     chapterId || null,
     Number(nombreExercices) || 1,
-    incertitude || "1",
     image || null,
     historyCheck.value
   );
