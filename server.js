@@ -72,6 +72,47 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
+// ---------- Limite quotidienne PAR ÉLÈVE (identifié par IP) ----------
+// Pas de compte élève (pas d'auth) : l'IP sert d'identifiant approximatif,
+// comme pour le délai de 12s ci-dessus. Chaque élève a droit à 20
+// générations de TP et 20 d'exercice par jour, pour qu'un seul élève ne
+// puisse pas épuiser le quota Groq/Mistral partagé par toute la classe en
+// s'amusant à spammer le bouton "Générer" (demande explicite de Ben, session
+// du 5 septembre 2026). Compteurs en mémoire par IP, remis à zéro chaque
+// jour (date UTC) — se réinitialisent aussi à chaque redémarrage du serveur,
+// ce qui est très bien pour un simple garde-fou anti-abus, pas une
+// comptabilité stricte.
+const DAILY_LIMIT_TP = Number(process.env.DAILY_LIMIT_TP || 20);
+const DAILY_LIMIT_EXERCICE = Number(process.env.DAILY_LIMIT_EXERCICE || 20);
+const dailyCountsByIp = new Map(); // ip -> { day, tp, exercice }
+
+function getDailyCounters(ip) {
+  const today = new Date().toISOString().slice(0, 10);
+  let entry = dailyCountsByIp.get(ip);
+  if (!entry || entry.day !== today) {
+    entry = { day: today, tp: 0, exercice: 0 };
+    dailyCountsByIp.set(ip, entry);
+  }
+  return entry;
+}
+
+function checkAndIncrementDailyLimit(ip, type) {
+  const entry = getDailyCounters(ip);
+  const limit = type === "tp" ? DAILY_LIMIT_TP : DAILY_LIMIT_EXERCICE;
+  if (entry[type] >= limit) return false;
+  entry[type]++;
+  return true;
+}
+
+// Nettoyage périodique des entrées d'un jour révolu (une fois par heure
+// suffit largement, pas besoin de plus fréquent pour un compteur quotidien).
+setInterval(() => {
+  const today = new Date().toISOString().slice(0, 10);
+  for (const [ip, entry] of dailyCountsByIp) {
+    if (entry.day !== today) dailyCountsByIp.delete(ip);
+  }
+}, 60 * 60 * 1000).unref();
+
 // Recharge périodique du contexte (TP d'exemple ajoutés récemment) sans redéploiement.
 setInterval(reloadContext, 5 * 60 * 1000).unref();
 
@@ -220,18 +261,16 @@ ${examplesSection}`;
 }
 
 // ---------- Construction du prompt : Exercice ----------
-function buildExerciceMessages(consigne, chapterId, nombreExercices, image, history) {
+function buildExerciceMessages(consigne, chapterId, image, history) {
   const { chapterSection, chapterList, exercisesExamplesSection, structureTemplateExercice, courbesMarkdown, schemasSection } =
     buildContextBlock(chapterId);
 
   const schemasBlock = buildSchemasBlock(schemasSection);
 
-  const nombre = [1, 3, 5].includes(nombreExercices) ? nombreExercices : 1;
-  const nombreBlock =
-    nombre === 1
-      ? `Génère UN SEUL exercice.`
-      : `Génère EXACTEMENT ${nombre} exercices distincts et indépendants (des situations différentes, pas des variations mineures du même montage), chacun avec sa propre structure complète (Titre, Documents utiles éventuels, Énoncé, Questions, Corrigé). Chaque exercice commence par sa propre ligne "Titre : Exercice N — <titre spécifique>" (ex: "Titre : Exercice 2 — Décharge d'un condensateur"), en réutilisant exactement la même convention "Titre :" — jamais un autre type de label pour les numéroter.
-AU MOINS UN de ces exercices doit être une étude de courbe : une question qui demande de LIRE, INTERPRÉTER ou EXPLOITER une courbe présentée via le marqueur [COURBE:...] (voir la liste des types disponibles fournie séparément) — par exemple lire une fréquence de coupure sur un diagramme de Bode, identifier un codage à partir d'un chronogramme, retrouver un symbole sur une constellation, etc. Choisis un type de courbe qui correspond réellement au chapitre demandé (n'en invente pas un hors sujet) ; si vraiment aucun type disponible ne correspond au chapitre demandé, ignore cette contrainte plutôt que de forcer une courbe hors sujet.`;
+  // Un seul exercice à la fois (demande explicite de Ben, session du 5
+  // septembre 2026 — le choix "plusieurs exercices" a été retiré de l'appli,
+  // en partie pour limiter la consommation de tokens par génération).
+  const nombreBlock = `Génère UN SEUL exercice. Si le chapitre demandé se prête naturellement à une étude de courbe (lecture/interprétation d'un diagramme de Bode, d'un chronogramme, d'une constellation...), privilégie ce type de question via le marqueur [COURBE:...] (voir la liste des types disponibles fournie séparément) plutôt qu'un exercice purement calculatoire — sans pour autant forcer une courbe hors sujet si le chapitre ne s'y prête pas.`;
 
   const imageBlock = image
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire l'exercice : si elle montre un composant ou montage précis, base l'exercice dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
@@ -250,9 +289,9 @@ AU MOINS UN de ces exercices doit être une étude de courbe : une question qui 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à s'entraîner en générant un exercice de physique appliquée à résoudre sur le papier, à partir d'une consigne qu'ils te donnent. Contrairement à un TP, il n'y a pas de matériel physique ni de manipulation — c'est un problème avec un corrigé détaillé fourni à la fin, que l'élève peut consulter pour se corriger après avoir cherché.
 
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
-- IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre de l'exercice (si plusieurs exercices sont demandés, le premier commence par "Titre : Exercice 1 — <titre>"). Rien avant — ni commentaire, ni introduction, ni ligne vide.
+- IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre de l'exercice. Rien avant — ni commentaire, ni introduction, ni ligne vide.
 - Ta réponse ne contient QUE l'exercice (ou les exercices) lui-même, du titre jusqu'au dernier Corrigé. N'ajoute aucun commentaire avant ou après.
-- Si l'élève demande une modification par rapport à un exercice déjà généré plus haut dans cette conversation, renvoie la VERSION COMPLÈTE et à jour (tous les exercices, du titre au dernier Corrigé), pas seulement le fragment modifié.
+- Si l'élève demande une modification par rapport à un exercice déjà généré plus haut dans cette conversation, renvoie la VERSION COMPLÈTE et à jour (du titre au Corrigé), pas seulement le fragment modifié.
 - ${nombreBlock}
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Registre neutre, académique, adapté à un élève de BTS.
@@ -298,8 +337,15 @@ app.get("/", (_req, res) => {
   res.json({ ok: true, service: "tp-generator-server" });
 });
 
-app.get("/api/status", (_req, res) => {
-  res.json(getStatus(getQueueLength()));
+app.get("/api/status", (req, res) => {
+  const counters = getDailyCounters(req.ip);
+  res.json({
+    ...getStatus(getQueueLength()),
+    dailyLimits: {
+      tp: { used: counters.tp, limit: DAILY_LIMIT_TP },
+      exercice: { used: counters.exercice, limit: DAILY_LIMIT_EXERCICE },
+    },
+  });
 });
 
 // Une image trop lourde ralentit inutilement la génération et gaspille le quota
@@ -367,6 +413,12 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
   if (!historyCheck.ok) {
     return res.status(400).json({ error: "invalid_input", message: historyCheck.message });
   }
+  if (!checkAndIncrementDailyLimit(req.ip, "tp")) {
+    return res.status(429).json({
+      error: "daily_limit_reached",
+      message: `Tu as atteint la limite de ${DAILY_LIMIT_TP} générations de TP par jour — réessaie demain.`,
+    });
+  }
 
   const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null, historyCheck.value);
 
@@ -400,7 +452,7 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
 });
 
 app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
-  const { consigne, chapterId, nombreExercices, image, history } = req.body || {};
+  const { consigne, chapterId, image, history } = req.body || {};
 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
@@ -414,9 +466,6 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
   if (!chapterId) {
     return res.status(400).json({ error: "invalid_input", message: "Chapitre manquant — indispensable pour générer un exercice cohérent avec le cours." });
   }
-  if (nombreExercices !== undefined && ![1, 3, 5].includes(Number(nombreExercices))) {
-    return res.status(400).json({ error: "invalid_input", message: "Nombre d'exercices invalide." });
-  }
   if (image !== undefined && image !== null) {
     if (typeof image !== "string" || !/^data:image\/(png|jpe?g|webp);base64,/.test(image)) {
       return res.status(400).json({ error: "invalid_input", message: "Format d'image invalide." });
@@ -429,11 +478,16 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
   if (!historyCheck.ok) {
     return res.status(400).json({ error: "invalid_input", message: historyCheck.message });
   }
+  if (!checkAndIncrementDailyLimit(req.ip, "exercice")) {
+    return res.status(429).json({
+      error: "daily_limit_reached",
+      message: `Tu as atteint la limite de ${DAILY_LIMIT_EXERCICE} générations d'exercice par jour — réessaie demain.`,
+    });
+  }
 
   const messages = buildExerciceMessages(
     consigne.trim(),
     chapterId || null,
-    Number(nombreExercices) || 1,
     image || null,
     historyCheck.value
   );
