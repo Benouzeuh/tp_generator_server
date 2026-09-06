@@ -226,5 +226,210 @@
     "file": "stm32-l152re-pinout.png",
     "description": "Brochage (pinout) complet de la carte STM32 Nucleo L152RE, avec en-têtes Arduino, GPIO, PWM, I2C, SPI annotés.",
     "chapterId": null
+  },
+  {
+    "id": "circuit-2-generateurs-3-resistances",
+    "file": "circuit-2-generateurs-3-resistances.png",
+    "description": "Circuit à 2 générateurs E1, E2 et 3 résistances : R1 en série depuis E1, R2 en dérivation, R3 en série vers E2.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-2-generateurs-4-resistances",
+    "file": "circuit-2-generateurs-4-resistances.png",
+    "description": "Circuit à 2 générateurs E1, E2 et 4 résistances : R1 série, R2 dérivation, R3 série, R4 dérivation.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-2-generateurs-5-resistances",
+    "file": "circuit-2-generateurs-5-resistances.png",
+    "description": "Circuit à 2 générateurs E1, E2 et 5 résistances : R1/R3/R5 en série, R2/R4 en dérivation.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-4-generateurs-5-resistances",
+    "file": "circuit-4-generateurs-5-resistances.png",
+    "description": "Circuit à 4 générateurs E1, E2, E3, E4 et 5 résistances (R1, R3, R5 en série, R2 et R4 en dérivation, chacun en série avec un générateur) — pour un exercice complexe sur les lois des mailles et des nœuds à plusieurs sources.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-rlc-serie-rlc",
+    "file": "circuit-rlc-serie-rlc.png",
+    "description": "Circuit RLC série alimenté par E1, dans l'ordre R1 puis L (bobine) puis C (condensateur), tension de sortie Uc aux bornes du condensateur.",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "circuit-rlc-serie-rcl",
+    "file": "circuit-rlc-serie-rcl.png",
+    "description": "Circuit RLC série alimenté par E1, dans l'ordre R1 puis C (condensateur) puis L (bobine), tension de sortie aux bornes de la bobine.",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "circuit-rlc-serie-lcr",
+    "file": "circuit-rlc-serie-lcr.png",
+    "description": "Circuit RLC série alimenté par E1, dans l'ordre L (bobine) puis C (condensateur) puis R, tension de sortie UR aux bornes de la résistance.",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "filtre-lc-r1-r2",
+    "file": "filtre-lc-r1-r2.png",
+    "description": "Filtre alimenté par E1 : L (bobine) en série, R1 en dérivation, C (condensateur) en série, R2 en dérivation en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-lc-r1-r2",
+    "file": "quadripole-lc-r1-r2.png",
+    "description": "Quadripôle (tension d'entrée Ve, pas de générateur dessiné) : L en série, R1 en dérivation, C en série, R2 en dérivation en sortie — même topologie que filtre-lc-r1-r2 mais présentée en quadripôle.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-l-r1-r2-c",
+    "file": "quadripole-l-r1-r2-c.png",
+    "description": "Quadripôle (tension d'entrée Ve) : L en série, R1 en dérivation, R2 en série, C en dérivation en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-c1-r1-r2-c2",
+    "file": "quadripole-c1-r1-r2-c2.png",
+    "description": "Quadripôle (tension d'entrée Ve), uniquement RC (pas de bobine) : C1 en série, R1 en dérivation, R2 en série, C2 en dérivation en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-c1-r1-l-parallele",
+    "file": "quadripole-c1-r1-l-parallele.png",
+    "description": "Quadripôle : C1 en série, puis R1 et L en dérivation en parallèle l'un de l'autre (même nœud de sortie), tension de sortie Vs mesurée aux bornes de cet ensemble R1//L.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-l-r1-c-sortie",
+    "file": "quadripole-l-r1-c-sortie.png",
+    "description": "Quadripôle : L en série, R1 en dérivation, puis C en dérivation en sortie (Vs mesurée aux bornes de C).",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "circuit-rlc-parallele-rl-c",
+    "file": "circuit-rlc-parallele-rl-c.png",
+    "description": "Circuit alimenté par Ve : une branche série R+L (R puis L, UR et UL indiqués) en parallèle avec une branche C (UC indiqué) — RLC parallèle, pas RLC série.",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "circuit-rl-serie-simple",
+    "file": "circuit-rl-serie-simple.png",
+    "description": "Circuit RL série simple : Ve alimente R puis L en série (UR et UL indiqués), une seule maille, pas de condensateur.",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "reseau-7-lampes",
+    "file": "reseau-7-lampes.png",
+    "description": "Réseau de 7 lampes (L1 à L7) alimenté par un générateur G, arrangées en grille avec des branches communes (L3 en pont entre les deux rangées du haut) — pour exercice sur les lois des mailles/nœuds avec un circuit à lampes plus complexe qu'à l'habitude.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-1-generateur-7-resistances",
+    "file": "circuit-1-generateur-7-resistances.png",
+    "description": "Circuit à un seul générateur E et 7 résistances (R1 à R7) organisées en réseau avec plusieurs mailles et nœuds, courants I, I1, I2 indiqués — pour un exercice complexe sur les lois des mailles et des nœuds à un seul générateur mais topologie riche.",
+    "chapterId": "ch1"
+  },
+  {
+    "id": "circuit-retard-l-r-lampes",
+    "file": "circuit-retard-l-r-lampes.png",
+    "description": "Générateur G alimentant deux branches en parallèle : une branche bobine+lampe, une branche résistance+lampe — pour illustrer le retard à l'établissement du courant dû à la bobine (une lampe s'allume avec retard par rapport à l'autre).",
+    "chapterId": "ch2"
+  },
+  {
+    "id": "oscillo-deux-sinusoides-1",
+    "file": "oscillo-deux-sinusoides-1.png",
+    "description": "Capture d'oscilloscope réelle : deux signaux sinusoïdaux déphasés superposés sur deux échelles verticales différentes (voie 1 en haut ~3V, voie 2 en bas ~6V/3V) — pour un exercice de lecture de déphasage/gain entre Ve et Vs directement sur une capture d'écran réaliste.",
+    "chapterId": null
+  },
+  {
+    "id": "oscillo-deux-sinusoides-2",
+    "file": "oscillo-deux-sinusoides-2.png",
+    "description": "Variante de oscillo-deux-sinusoides-1 : mêmes deux signaux sinusoïdaux déphasés sur deux échelles, décalage temporel différent — pour un second exercice de lecture de déphasage/gain sur capture d'oscilloscope.",
+    "chapterId": null
+  },
+  {
+    "id": "caracteristique-capteur-poussiere",
+    "file": "caracteristique-capteur-poussiere.png",
+    "description": "Caractéristique réelle (datasheet) d'un capteur de poussière : tension de sortie (V) en fonction de la densité de poussière (mg/m³), courbe croissante puis saturation — pour exercice de lecture de caractéristique de capteur/sensibilité.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "caracteristique-tmp35-36-37",
+    "file": "caracteristique-tmp35-36-37.png",
+    "description": "Caractéristique réelle (datasheet Analog Devices) des capteurs de température TMP35/TMP36/TMP37 : tension de sortie (V) en fonction de la température (°C), trois droites de sensibilités différentes — pour exercice de lecture de caractéristique de capteur/sensibilité.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "circuit-rlc-r1-r2-sortie",
+    "file": "circuit-rlc-r1-r2-sortie.png",
+    "description": "Circuit E(t) alimentant R puis L en série, C en dérivation, puis R1 et R2 en série formant la sortie (U2(t) mesurée aux bornes de R2) — filtre du 2nd ordre avec diviseur de tension en sortie.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "quadripole-c-charge-generique",
+    "file": "quadripole-c-charge-generique.png",
+    "description": "Quadripôle simple : condensateur en série (Vc indiqué), puis une charge générique (boîte non typée) en dérivation en sortie, Vs mesurée à ses bornes — utile pour un exercice où la nature exacte de la charge est à déterminer ou n'a pas d'importance.",
+    "chapterId": "ch7"
+  },
+  {
+    "id": "vitesse-son-vs-temperature",
+    "file": "vitesse-son-vs-temperature.png",
+    "description": "Graphe réel : vitesse du son (m/s) en fonction de la température (°C) pour l'air, le dioxygène et le diazote — trois droites croissantes de pentes proches — pour exercice sur la propagation des ondes sonores (ch11).",
+    "chapterId": "ch11"
+  },
+  {
+    "id": "caracteristique-ldr",
+    "file": "caracteristique-ldr.png",
+    "description": "Caractéristique réelle (datasheet) d'une photorésistance (LDR) : résistance (Ω) en fonction de l'éclairement (lx), échelle log-log, courbes Min. et Max. — pour exercice de lecture de caractéristique de capteur.",
+    "chapterId": "ch4"
+  },
+  {
+    "id": "ampli-soustracteur-differentiel",
+    "file": "ampli-soustracteur-differentiel.png",
+    "description": "Montage ampli-op soustracteur/différentiel classique : V1 et V2 en entrée via des résistances R1, contre-réaction R2, second R2 en pont diviseur sur l'entrée + — sortie Vs proportionnelle à (V2-V1).",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "ampli-non-inverseur",
+    "file": "ampli-non-inverseur.png",
+    "description": "Montage ampli-op non-inverseur classique : Ve sur l'entrée +, pont diviseur de deux résistances R entre la sortie Vs et la masse, point milieu sur l'entrée -.",
+    "chapterId": "ch13"
+  },
+  {
+    "id": "datasheet-fibre-optique-specs",
+    "file": "datasheet-fibre-optique-specs.png",
+    "description": "Tableau de spécifications réelles (datasheet) d'une fibre optique : affaiblissement (dB/km) à 850/1300 nm, bande passante (MHz.km), diamètre de cœur, ouverture numérique, diamètre de gaine — pour exercice de lecture de caractéristiques de fibre (ch18).",
+    "chapterId": "ch18"
+  },
+  {
+    "id": "spectre-zigbee-mesure",
+    "file": "spectre-zigbee-mesure.png",
+    "description": "Capture réelle d'analyseur de spectre montrant le spectre d'un signal Zigbee (fréquence de départ/arrêt, span 5 MHz) — pour exercice de détermination de fréquence centrale, numéro de canal et largeur de bande à partir d'une mesure réelle (ch19).",
+    "chapterId": "ch19"
+  },
+  {
+    "id": "modulation-64qam-forme-onde",
+    "file": "modulation-64qam-forme-onde.png",
+    "description": "Forme d'onde réelle d'une modulation 64-QAM : signal porteur modulé (trait plein) superposé à un signal de référence non modulé (pointillés), variations d'amplitude et de phase visibles — pour exercice de lecture/interprétation d'une modulation QAM sur une forme d'onde réelle (ch19).",
+    "chapterId": "ch19"
+  },
+  {
+    "id": "boucle-asservissement-c-h-k",
+    "file": "boucle-asservissement-c-h-k.png",
+    "description": "Schéma-bloc d'un système asservi simple : E(t) -> comparateur (+/-) -> correcteur C(p) -> chaîne directe H(p) -> S(t), avec retour K rebouclé sur le comparateur (-).",
+    "chapterId": "ch21"
+  },
+  {
+    "id": "boucle-asservissement-c-h1-h2-k",
+    "file": "boucle-asservissement-c-h1-h2-k.png",
+    "description": "Schéma-bloc d'un système asservi avec chaîne directe en deux blocs : E(t) -> comparateur (+/-) -> correcteur C(p) -> H1(p) -> H2(p) -> S(t), avec retour K rebouclé sur le comparateur (-).",
+    "chapterId": "ch21"
+  },
+  {
+    "id": "boucle-asservissement-perturbation",
+    "file": "boucle-asservissement-perturbation.png",
+    "description": "Schéma-bloc d'un système asservi avec perturbation : E(p) -> comparateur (+/-) -> C(p) -> H1(p) -> second comparateur recevant en plus une perturbation Ep(p) en entrée (+/-) -> H2(p) -> S(p), avec retour K rebouclé sur le premier comparateur — pour un exercice sur le rejet de perturbation d'un système asservi.",
+    "chapterId": "ch21"
   }
 ]
+
