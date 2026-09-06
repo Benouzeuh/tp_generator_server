@@ -3,132 +3,132 @@
     "id": "ch1",
     "number": 1,
     "title": "Théorèmes de base de l'électricité",
-    "summary": "Circuits, tension, courant, loi des mailles, loi des nœuds."
+    "summary": "Courant et tension : définitions, conventions de fléchage (récepteur pour un dipôle passif, générateur pour un dipôle actif). Dipôles en série : même courant, tensions qui s'additionnent (U = U1 + U2). Dipôles en parallèle : même tension, courants qui s'additionnent (I = I1 + I2). Loi des mailles : somme des tensions nulle sur une maille fermée. Loi des nœuds : somme des courants entrants égale la somme des courants sortants. Mesure : multimètre en voltmètre (parallèle) et en ampèremètre (série), utilisation de l'oscilloscope."
   },
   {
     "id": "ch2",
     "number": 2,
     "title": "Composants de base de l'électronique",
-    "summary": "Résistance, condensateur, bobine, pont diviseur."
+    "summary": "Résistance : loi d'Ohm (U = R×I), associations série/parallèle. Condensateur : q = C×U, i = C×du/dt, énergie ½CU², associations série/parallèle. Bobine : u = L×di/dt, énergie ½LI², associations série/parallèle. Méthode générale de résolution d'un circuit ; pont diviseur de tension (U2 = E×R2/(R1+R2)). Régimes transitoires RC et RL : la résolution de l'équation différentielle n'est PAS au programme — la solution (uC(t) = E×(1−e^(−t/RC)), etc.) doit être donnée directement si l'exercice porte sur l'exploitation du résultat, jamais demandée à établir."
   },
   {
     "id": "ch3",
     "number": 3,
     "title": "Les signaux périodiques",
-    "summary": "Signal périodique, période, fréquence, valeur efficace."
+    "summary": "Signal continu (échelon, régimes transitoire/permanent) et signal alternatif. Période et fréquence (f = 1/T). Valeur moyenne (Smoy = Aire/T par calcul d'aire géométrique — rectangles, triangles —, jamais par calcul intégral ; ou (Smin+Smax)/2 pour un signal symétrique). Valeur efficace (Seff = √((S²)moy), toujours sans calcul intégral). Signal sinusoïdal : s(t) = Smax×sin(ωt+φ) avec ω = 2πf, et Seff = Smax/√2. Déphasage entre deux signaux."
   },
   {
     "id": "ch4",
     "number": 4,
     "title": "Chaînes d'énergie et d'information",
-    "summary": "Chaîne d'énergie, chaîne d'information, capteurs, CAN."
+    "summary": "Chaîne d'énergie et chaîne d'information. Sources d'énergie (pile, alimentation stabilisée, GBF) ; puissance et énergie (P = U×I ou R×I² en continu, P = Ueff×Ieff×cos(φ) en sinusoïdal, E = P×t) ; autonomie d'une batterie. Capteurs : types (TOR, analogique, intégré, numérique), sensibilité (S = Δsortie/Δentrée). Introduction à la numérisation : échantillonnage, Convertisseur Analogique-Numérique (quantum q = ΔV/2ⁿ, code N = Entier(Ue/q))."
   },
   {
     "id": "ch5",
     "number": 5,
     "title": "Analyse fréquentielle des signaux périodiques",
-    "summary": "Spectre, théorème de Fourier, harmoniques."
+    "summary": "Théorème de Fourier : tout signal périodique se décompose en somme de sinusoïdes (harmoniques). Spectre d'un signal (raies aux fréquences fn = n×f1). Taux de distorsion harmonique (THD = 100×√(V2²+V3²+...)/V1). Valeur efficace retrouvée à partir du spectre. Spectres caractéristiques des signaux carré et triangle. Lecture d'un spectre à l'oscilloscope (SPAN, affichage en VRMS ou dBVRMS)."
   },
   {
     "id": "ch6",
     "number": 6,
     "title": "Analyse fréquentielle et impédance",
-    "summary": "Nombres complexes, impédance, régime sinusoïdal."
+    "summary": "Caractérisation des dipôles passifs en régime sinusoïdal, linéarité. Rappels sur les nombres complexes (forme algébrique/géométrique) — le calcul mathématique du module et de l'argument (racine, arctan) n'est pas ce qui est visé en exercice, l'objectif est l'utilisation physique des complexes. Impédance complexe : U = Z×I. Impédances des dipôles classiques : ZR = R, ZC = 1/(jCω), ZL = jLω. Association d'impédances. Pont diviseur de tension généralisé (Vs/Ve = Z2/(Z1+Z2))."
   },
   {
     "id": "ch7",
     "number": 7,
     "title": "Réponse fréquentielle et transmittance isochrone",
-    "summary": "Quadripôle, fonction de transfert, filtres RC."
+    "summary": "Notion de quadripôle et de filtrage. Transmittance isochrone T(jω) = S(jω)/E(jω) (module = amplification, argument = déphasage) — pas de calcul mathématique de module/argument attendu en exercice. Fréquence de coupure et bande passante. Systèmes du 1er ordre : T(jω) = T0/(1+jω/ωc). Systèmes du 2nd ordre : T(jω) = T0/(1+2mjω/ωc+(jω/ωc)²), cas particulier du passe-bande avec le facteur de qualité Q."
   },
   {
     "id": "ch8",
     "number": 8,
     "title": "Réponse fréquentielle et diagramme de Bode",
-    "summary": "Notion de gain, diagramme de Bode."
+    "summary": "Le gain en décibels (GdB = 20×log(Vsmax/Vemax)) et le diagramme de Bode — pas de calcul mathématique de module/argument attendu, l'accent est mis sur la LECTURE du diagramme. Les exercices sur ce chapitre doivent présenter un diagramme de Bode à exploiter. Lecture de l'ordre du filtre, de la fréquence de coupure et de la bande passante sur le diagramme. Passage entre transmittance isochrone et Bode (T0 = 10^(G0/20))."
   },
   {
     "id": "ch9",
     "number": 9,
     "title": "Synthèse de filtre",
-    "summary": "Filtre : gabarit, synthèse, familles de filtres."
+    "summary": "Détermination de la sortie d'un filtre par analyse fréquentielle : entrée sinusoïdale (Vsmax = Vemax×10^(GdB/20), avec GdB = 20×log(Vs/Ve) — formule centrale de ce chapitre) ou entrée périodique (traitement harmonique par harmonique). Synthèse de filtre à partir d'un cahier des charges : le GABARIT (bande passante/bande atténuée, pente) est la notion la plus importante du chapitre, à privilégier dans les exercices — pas de calcul mathématique de module/argument attendu. Choix parmi les familles de filtres connues."
   },
   {
     "id": "ch10",
     "number": 10,
     "title": "Réponse indicielle des systèmes",
-    "summary": "Réponse à un échelon, notation de Laplace."
+    "summary": "Réponse indicielle (réponse à un échelon) et notation de Laplace. Système du 1er ordre : passe-bas T(p) = T0/(1+τp), temps de réponse à 5% (TR5% = 3τ). Système du 2nd ordre (passe-bas) avec dépassement D% = 100×(Smax−S∞)/S∞. Différencier un système du 1er ordre d'un système du 2nd ordre à partir de sa réponse indicielle."
   },
   {
     "id": "ch11",
     "number": 11,
     "title": "Les phénomènes ondulatoires",
-    "summary": "Ondes mécaniques et électromagnétiques, Doppler."
+    "summary": "Définition d'une onde, ondes transversales/longitudinales. Onde sinusoïdale : λ = c/f. Ondes mécaniques et sonores, effet Doppler, repérage par écho/sonar (d = v×t/2). Ondes électromagnétiques : aspect ondulatoire (c ≈ 3,00×10⁸ m/s) et aspect corpusculaire (Ephoton = h×f). Classification du spectre électromagnétique."
   },
   {
     "id": "ch12",
     "number": 12,
     "title": "Application des OEM à l'électronique",
-    "summary": "Théorie des bandes, effet photoélectrique, photodiode."
+    "summary": "Excitation/désexcitation atomique (ΔE = h×f). Théorie des bandes dans un solide, condition de l'effet photoélectrique (Ephoton > Egap). Composants opto-électroniques : photorésistance, photodiode, jonction PN, cellule photovoltaïque. Rendement d'un panneau solaire (η = Pélec/Psolaire)."
   },
   {
     "id": "ch13",
     "number": 13,
     "title": "Amplification",
-    "summary": "Amplificateur opérationnel, montages linéaires/saturés."
+    "summary": "Amplificateur opérationnel (AO/ALI) : caractéristiques idéales. Distinguer mode linéaire et mode saturé. Montages en mode saturé : comparateur simple et à hystérésis (trigger de Schmitt). Montages linéaires classiques. Limite du produit gain-bande (~10⁶ Hz). Résistance négative."
   },
   {
     "id": "ch14",
     "number": 14,
     "title": "Ligne de transmission et adaptation en puissance",
-    "summary": "Lignes de transmission, adaptation en puissance."
+    "summary": "Limites de l'ARQS. Adaptation d'impédance (Zs = Zc = ZL), coefficient de réflexion, puissance réfléchie, ROS. Atténuation le long d'une ligne (AdB = 20×log(Ve/Vs)). Dépannage d'un réseau électrique par méthode de l'écho : point à privilégier dans les exercices, avec la formule d = v×t/2 (le facteur 2 vient de l'aller-retour de l'onde jusqu'au défaut)."
   },
   {
     "id": "ch15",
     "number": 15,
     "title": "Numérisation des signaux",
-    "summary": "Échantillonnage, quantification, théorème de Shannon."
+    "summary": "Signal analogique, échantillonné, numérique. Échantillonnage (fe = 1/Te) et théorème de Shannon (fe > 2×fmax). Convertisseur Analogique-Numérique : quantum q = ΔV/2ⁿ, code N = Entier(Ue/q). Adaptation et restitution de la mesure."
   },
   {
     "id": "ch16",
     "number": 16,
     "title": "Filtrage numérique",
-    "summary": "Schémas blocs, filtrage RIF/RII, réponse fréquentielle."
+    "summary": "Filtres récursifs (IIR) et non récursifs (FIR), représentation par schéma bloc. Techniques de filtrage numérique. Réponse impulsionnelle et critère de stabilité. Réponse fréquentielle des filtres numériques (périodique)."
   },
   {
     "id": "ch17",
     "number": 17,
     "title": "Codage de l'information en bande de base",
-    "summary": "Codage en ligne, DSP, norme Ethernet."
+    "summary": "Principe de la transmission filaire en bande de base. Analyse de codages simples (NRZ et variantes). Exemple concret : le codage Ethernet. Défauts de ligne (atténuation, distorsion) et unités de puissance (dB, dBm)."
   },
   {
     "id": "ch18",
     "number": 18,
     "title": "Fibre optique",
-    "summary": "Fibre optique, dispersion, atténuation."
+    "summary": "Lois de Snell-Descartes et réflexion totale interne. Ouverture numérique, vitesse de groupe, produit bande passante × longueur constant. Atténuation le long d'une fibre. Différents types de fibre optique."
   },
   {
     "id": "ch19",
     "number": 19,
     "title": "Transmission par fréquence porteuse",
-    "summary": "Modulation ASK/FSK/PSK, constellation, OFDM."
+    "summary": "Nécessité de la modulation pour la transmission sans fil. Modulation numérique et transmission M-aire (Db = R×N, M = 2^N). Modulations basiques : ASK, FSK, PSK (bande B = 2×R). Diagramme de constellation. Modulations avancées : QAM, MSK, GMSK. Modulations multi-porteuses : OFDM."
   },
   {
     "id": "ch20",
     "number": 20,
     "title": "Les antennes",
-    "summary": "Directivité d'antenne, MIMO, bilan de liaison."
+    "summary": "Principe de fonctionnement d'une antenne. Directivité. Antenne patch et MIMO. Bilan de liaison radio : perte en espace libre (Lp/FSL), équation de Friis."
   },
   {
     "id": "ch21",
     "number": 21,
     "title": "Structure et caractéristiques des systèmes asservis",
-    "summary": "Systèmes asservis, stabilité, correcteurs PID."
+    "summary": "Structure d'un système asservi. Modélisation : FTCD, FTBO, FTBF (formule de Black en retour unitaire). Caractéristiques : précision, rapidité, stabilité, dépassement. Correction et critères de stabilité (marges de gain/phase)."
   },
   {
     "id": "ch22",
     "number": "transverse",
     "title": "Métrologie et mesure",
-    "summary": "Système international d'unités, incertitudes, Z-score."
+    "summary": "Système international d'unités. Analyse d'une mesure : erreur absolue, erreur relative, écart normalisé. Sources d'erreur. Règles d'affichage du résultat d'une mesure."
   }
 ]
