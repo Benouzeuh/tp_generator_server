@@ -56,6 +56,22 @@
 
 - Câbles BNC-BNC, câbles BNC-Banane, câbles "pont" (mâle/femelle ou les deux),
   câbles double puits, double T (dédoublement de signal).
+- Bobines de câble coaxial de 100 m (plusieurs disponibles) : permettent de
+  réaliser en vrai (pas seulement en simulation) des manipulations sur les
+  lignes de transmission (ch14) — propagation, adaptation d'impédance,
+  coefficient de réflexion, dépannage par méthode de l'écho (mesure d'un
+  retard de propagation réel sur une vraie longueur de câble, pas une valeur
+  imposée arbitrairement).
+
+## Optique et ondes mécaniques
+
+- Dioptres (matériel de réfraction/réflexion), lasers rouges, règles graduées :
+  pour toute manipulation sur les lois de Snell-Descartes, la réflexion totale
+  interne, ou plus généralement l'optique géométrique (ch18).
+- Cuve à ondes, capable de générer des ondes planes, équipée d'un
+  stroboscope : pour toute manipulation sur les phénomènes ondulatoires
+  (ch11) — propagation d'une onde plane, mesure de longueur d'onde, de
+  célérité, observation par effet stroboscopique (onde "figée" ou ralentie).
 
 ## Plaques d'essai
 
