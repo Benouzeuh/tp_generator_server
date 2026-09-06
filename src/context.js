@@ -15,13 +15,42 @@ const path = require("path");
 const CHAPTERS_META_PATH = path.join(__dirname, "..", "context", "chapters-meta.json");
 const EXAMPLE_TP_DIR = path.join(__dirname, "..", "context", "example-tp");
 const STRUCTURE_TEMPLATE_PATH = path.join(__dirname, "..", "context", "structure-template.md");
+const STRUCTURE_TEMPLATE_EXERCICE_PATH = path.join(__dirname, "..", "context", "structure-template-exercice.md");
 const MATERIEL_PATH = path.join(__dirname, "..", "context", "materiel-disponible.md");
 const SCHEMAS_CATALOGUE_PATH = path.join(__dirname, "..", "context", "schemas-catalogue.json");
+// Documentation du marqueur [COURBE:...] : extraite de structure-template.md
+// (session du 5 septembre 2026) pour être partagée telle quelle entre le
+// générateur de TP et le futur générateur d'exercices, sans dupliquer son
+// contenu à chaque fois qu'un nouveau type de courbe est ajouté.
+const COURBES_MARKDOWN_PATH = path.join(__dirname, "..", "context", "marqueurs-courbes.md");
+// Exercices déjà présents dans le cours de l'appli (extraits automatiquement
+// par scripts/sync-exercises.js depuis cours.js + data.js) — servent
+// d'exemples de calibration pour le générateur d'exercices, comme les TP
+// d'exemple pour le générateur de TP, mais sans besoin de rédaction manuelle
+// puisqu'ils existent déjà.
+const EXERCISES_EXISTANTS_PATH = path.join(__dirname, "..", "context", "exercises-existants.json");
 
 let cachedSchemas = null;
 
 let cachedStructureTemplate = null;
+let cachedStructureTemplateExercice = null;
 let cachedMateriel = null;
+let cachedCourbesMarkdown = null;
+let cachedExercisesExistants = null;
+
+function loadExercisesExistants() {
+  if (cachedExercisesExistants) return cachedExercisesExistants;
+  try {
+    cachedExercisesExistants = JSON.parse(fs.readFileSync(EXERCISES_EXISTANTS_PATH, "utf8"));
+  } catch (err) {
+    console.warn(
+      `[context] Impossible de lire ${EXERCISES_EXISTANTS_PATH} (${err.message}). ` +
+        `Lancer "npm run sync-exercises -- /chemin/vers/cours.js /chemin/vers/data.js" pour le générer.`
+    );
+    cachedExercisesExistants = {};
+  }
+  return cachedExercisesExistants;
+}
 
 function loadStructureTemplate() {
   if (cachedStructureTemplate) return cachedStructureTemplate;
@@ -32,6 +61,28 @@ function loadStructureTemplate() {
     cachedStructureTemplate = "";
   }
   return cachedStructureTemplate;
+}
+
+function loadStructureTemplateExercice() {
+  if (cachedStructureTemplateExercice) return cachedStructureTemplateExercice;
+  try {
+    cachedStructureTemplateExercice = fs.readFileSync(STRUCTURE_TEMPLATE_EXERCICE_PATH, "utf8").trim();
+  } catch (err) {
+    console.warn(`[context] Impossible de lire ${STRUCTURE_TEMPLATE_EXERCICE_PATH} (${err.message}).`);
+    cachedStructureTemplateExercice = "";
+  }
+  return cachedStructureTemplateExercice;
+}
+
+function loadCourbesMarkdown() {
+  if (cachedCourbesMarkdown) return cachedCourbesMarkdown;
+  try {
+    cachedCourbesMarkdown = fs.readFileSync(COURBES_MARKDOWN_PATH, "utf8").trim();
+  } catch (err) {
+    console.warn(`[context] Impossible de lire ${COURBES_MARKDOWN_PATH} (${err.message}).`);
+    cachedCourbesMarkdown = "";
+  }
+  return cachedCourbesMarkdown;
 }
 
 function loadMateriel() {
@@ -112,8 +163,11 @@ function reloadContext() {
   cachedChaptersMeta = null;
   cachedExampleTp = null;
   cachedStructureTemplate = null;
+  cachedStructureTemplateExercice = null;
+  cachedCourbesMarkdown = null;
   cachedMateriel = null;
   cachedSchemas = null;
+  cachedExercisesExistants = null;
 }
 
 /**
@@ -124,6 +178,7 @@ function buildContextBlock(chapterId) {
   const chapters = loadChaptersMeta();
   const examples = loadExampleTp();
   const schemas = loadSchemas();
+  const exercisesByChapter = loadExercisesExistants();
 
   let chapterSection;
   if (chapterId) {
@@ -151,6 +206,29 @@ function buildContextBlock(chapterId) {
         .join("\n\n")
     : "(Aucun TP d'exemple disponible pour l'instant — le professeur n'en a pas encore déposé.)";
 
+  // Exercices déjà présents dans le cours pour ce chapitre (voir
+  // scripts/sync-exercises.js) — utilisés comme exemples de calibration du
+  // générateur d'EXERCICES, séparément des exemples de TP ci-dessus (qui ne
+  // conviennent pas : structure et objectif différents). Priorité au
+  // chapitre demandé, complété par d'autres chapitres si moins de 3 trouvés.
+  const chapterExercises = chapterId ? exercisesByChapter[chapterId] || [] : [];
+  const otherExercises = Object.entries(exercisesByChapter)
+    .filter(([id]) => id !== chapterId)
+    .flatMap(([, list]) => list);
+  const chosenExercises = [...chapterExercises, ...otherExercises].slice(0, 3);
+  const exercisesExamplesSection = chosenExercises.length
+    ? chosenExercises
+        .map((ex, i) => {
+          const parts = [`--- Exemple d'exercice déjà dans le cours n°${i + 1} (${ex.chapterId}) ---`];
+          if (ex.title) parts.push(`Titre : ${ex.title}`);
+          if (ex.enonce) parts.push(`Énoncé : ${ex.enonce}`);
+          if (ex.questions.length) parts.push(`Questions :\n${ex.questions.map((q) => `- ${q}`).join("\n")}`);
+          if (ex.corrige) parts.push(`Corrigé : ${ex.corrige}`);
+          return parts.join("\n");
+        })
+        .join("\n\n")
+    : "(Aucun exercice existant disponible pour l'instant sur ce chapitre.)";
+
   const schemasSection = schemas.length
     ? schemas.map((s) => `- ${s.id} : ${s.description}`).join("\n")
     : null;
@@ -159,7 +237,10 @@ function buildContextBlock(chapterId) {
     chapterSection,
     chapterList,
     examplesSection,
+    exercisesExamplesSection,
     structureTemplate: loadStructureTemplate(),
+    structureTemplateExercice: loadStructureTemplateExercice(),
+    courbesMarkdown: loadCourbesMarkdown(),
     materiel: loadMateriel(),
     schemasSection,
   };
@@ -169,8 +250,11 @@ module.exports = {
   loadChaptersMeta,
   loadExampleTp,
   loadStructureTemplate,
+  loadStructureTemplateExercice,
+  loadCourbesMarkdown,
   loadMateriel,
   loadSchemas,
+  loadExercisesExistants,
   reloadContext,
   buildContextBlock,
 };
