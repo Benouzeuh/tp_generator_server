@@ -192,6 +192,8 @@ function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image,
   const dureeLabel = duree || "2h";
   const dureeBlock = `Durée de séance visée : ${dureeLabel}. Dimensionne le nombre et la profondeur des manipulations en conséquence : un TP de 1h doit être sensiblement plus court/ciblé qu'un TP de 3h (moins de parties, moins de mesures répétées), ne mets pas artificiellement le même contenu quelle que soit la durée.`;
 
+  const courbesUsageBlock = `Consulte la liste "Utilise activement ces courbes" fournie séparément avec les types de courbes disponibles : si le chapitre demandé y figure, utilise PAR DÉFAUT une courbe calculée via [COURBE:...] dans un Document utile et/ou une question d'exploitation de ce TP (théorie illustrée, ou courbe à faire lire/comparer à une mesure), plutôt que de t'en passer. Pour un chapitre qui n'y figure pas, une courbe reste possible mais n'est pas systématique — ne force jamais une courbe hors sujet.`;
+
   const stm32Block = useStm32
     ? `L'élève souhaite utiliser la carte STM32 Nucleo L152RE pour ce TP. Si tu choisis de l'utiliser dans le montage, tu DOIS impérativement inclure dans les Documents utiles le marqueur "[SCHEMA:stm32-l152re-pinout]" pour montrer son brochage — ne décris jamais son brochage en mots ou en ASCII-art à la place. Si finalement tu n'utilises pas cette carte pour ce TP, ignore cette consigne.`
     : "";
@@ -218,6 +220,7 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - Éviter de faire reposer le TP sur de longs calculs analytiques : privilégier la manipulation, l'observation et l'analyse conceptuelle des résultats. Des calculs simples et ponctuels sont bienvenus, pas des développements longs qui font perdre le fil de la manipulation.
 - Registre neutre, académique, adapté à un élève de BTS (pas de familiarité, pas de tutoiement excessif dans le contenu du TP lui-même).
 - ${dureeBlock}
+- ${courbesUsageBlock}
 ${stm32Block ? "- " + stm32Block : ""}
 ${imageBlock ? "- " + imageBlock : ""}
 
@@ -272,7 +275,7 @@ function buildExerciceMessages(consigne, chapterId, image, history) {
   // Un seul exercice à la fois (demande explicite de Ben, session du 5
   // septembre 2026 — le choix "plusieurs exercices" a été retiré de l'appli,
   // en partie pour limiter la consommation de tokens par génération).
-  const nombreBlock = `Génère UN SEUL exercice. Si le chapitre demandé se prête naturellement à une étude de courbe (lecture/interprétation d'un diagramme de Bode, d'un chronogramme, d'une constellation...), privilégie ce type de question via le marqueur [COURBE:...] (voir la liste des types disponibles fournie séparément) plutôt qu'un exercice purement calculatoire — sans pour autant forcer une courbe hors sujet si le chapitre ne s'y prête pas.`;
+  const nombreBlock = `Génère UN SEUL exercice. Consulte la liste "Utilise activement ces courbes" fournie séparément avec les types de courbes disponibles : si le chapitre demandé y figure, utilise PAR DÉFAUT une courbe calculée via [COURBE:...] pour cet exercice plutôt qu'un exercice purement calculatoire/textuel — ne t'en passe que si la consigne de l'élève l'exclut explicitement. Pour un chapitre qui n'y figure pas, une courbe reste possible mais n'est pas systématique — ne force jamais une courbe hors sujet.`;
 
   const imageBlock = image
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire l'exercice : si elle montre un composant ou montage précis, base l'exercice dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
@@ -334,6 +337,7 @@ ${exercisesExamplesSection}`;
 }
 
 // ---------- Endpoints ----------
+
 
 app.get("/", (_req, res) => {
   res.json({ ok: true, service: "tp-generator-server" });
