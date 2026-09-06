@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node server.js",
     "sync-chapters": "node scripts/sync-chapters.js",
-    "sync-schemas": "node scripts/sync-schemas.js"
+    "sync-schemas": "node scripts/sync-schemas.js",
+    "sync-exercises": "node scripts/sync-exercises.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
