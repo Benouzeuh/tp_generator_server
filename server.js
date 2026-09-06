@@ -5,23 +5,23 @@
 // Groq échoue), et renvoyer le TP généré. Aucune donnée n'est stockée (pas de base
 // de données, pas de compte élève) — voir README.md pour le détail du fonctionnement
 // et le guide de déploiement.
-
+ 
 require("dotenv").config();
-
+ 
 const express = require("express");
 const cors = require("cors");
-
+ 
 const { generateWithFallback } = require("./src/providers");
 const { recordProviderResult, getStatus } = require("./src/rateStatus");
 const { enqueue, getQueueLength } = require("./src/queue");
 const { buildContextBlock, reloadContext } = require("./src/context");
-
+ 
 const app = express();
 // 20kb suffisait pour texte seul ; une image compressée en base64 peut peser
 // quelques centaines de Ko, d'où la limite plus généreuse (bornée côté validation
 // applicative juste en dessous, voir MAX_IMAGE_BASE64_CHARS).
 app.use(express.json({ limit: "6mb" }));
-
+ 
 // ---------- CORS ----------
 // ALLOWED_ORIGINS="*" en développement, sinon liste séparée par des virgules
 // (ex: "https://revision-bts-ciel.netlify.app"). Ne pas laisser "*" une fois l'URL
@@ -40,14 +40,14 @@ app.use(
     },
   })
 );
-
+ 
 // ---------- Anti-abus léger, par IP ----------
 // Pas un système de quota par élève (pas d'auth, pas de compte) : juste un garde-fou
 // simple pour éviter qu'un seul appareil ne spamme le bouton "Générer" et n'épuise à
 // lui seul le quota partagé de toute la classe.
 const MIN_INTERVAL_MS = Number(process.env.MIN_INTERVAL_MS || 12 * 1000);
 const lastRequestByIp = new Map();
-
+ 
 function ipThrottle(req, res, next) {
   const ip = req.ip;
   const now = Date.now();
@@ -63,7 +63,7 @@ function ipThrottle(req, res, next) {
   lastRequestByIp.set(ip, now);
   next();
 }
-
+ 
 // Nettoyage périodique pour ne pas laisser grossir la Map indéfiniment.
 setInterval(() => {
   const cutoff = Date.now() - 10 * 60 * 1000;
@@ -71,7 +71,7 @@ setInterval(() => {
     if (ts < cutoff) lastRequestByIp.delete(ip);
   }
 }, 5 * 60 * 1000).unref();
-
+ 
 // ---------- Limite quotidienne PAR ÉLÈVE (identifié par IP) ----------
 // Pas de compte élève (pas d'auth) : l'IP sert d'identifiant approximatif,
 // comme pour le délai de 12s ci-dessus. Chaque élève a droit à 20
@@ -85,7 +85,7 @@ setInterval(() => {
 const DAILY_LIMIT_TP = Number(process.env.DAILY_LIMIT_TP || 20);
 const DAILY_LIMIT_EXERCICE = Number(process.env.DAILY_LIMIT_EXERCICE || 20);
 const dailyCountsByIp = new Map(); // ip -> { day, tp, exercice }
-
+ 
 function getDailyCounters(ip) {
   const today = new Date().toISOString().slice(0, 10);
   let entry = dailyCountsByIp.get(ip);
@@ -95,7 +95,7 @@ function getDailyCounters(ip) {
   }
   return entry;
 }
-
+ 
 function checkAndIncrementDailyLimit(ip, type) {
   const entry = getDailyCounters(ip);
   const limit = type === "tp" ? DAILY_LIMIT_TP : DAILY_LIMIT_EXERCICE;
@@ -103,7 +103,7 @@ function checkAndIncrementDailyLimit(ip, type) {
   entry[type]++;
   return true;
 }
-
+ 
 // Nettoyage périodique des entrées d'un jour révolu (une fois par heure
 // suffit largement, pas besoin de plus fréquent pour un compteur quotidien).
 setInterval(() => {
@@ -112,12 +112,12 @@ setInterval(() => {
     if (entry.day !== today) dailyCountsByIp.delete(ip);
   }
 }, 60 * 60 * 1000).unref();
-
+ 
 // Recharge périodique du contexte (TP d'exemple ajoutés récemment) sans redéploiement.
 setInterval(reloadContext, 5 * 60 * 1000).unref();
-
+ 
 // ---------- Blocs de prompt partagés entre TP et exercices ----------
-
+ 
 // Consigne de niveau, partagée entre TP et exercices (demande explicite de
 // Ben, session du 5 septembre 2026) : cadre les outils mathématiques
 // autorisés en BTS, quel que soit le chapitre — certains chapitres précisent
@@ -129,10 +129,10 @@ function buildNiveauBlock() {
 - une résolution d'équation différentielle (même logique : donner la solution si elle sert à la suite, ne jamais la demander) ;
 - un calcul compliqué de module et d'argument d'un nombre complexe (racine carrée de somme de carrés, arctan...) — rester sur des cas simples (complexe réel pur, imaginaire pur, ou déjà sous forme module/argument) ou donner le résultat directement si le calcul n'est pas l'objectif pédagogique de la question.
 Toujours ancrer la situation dans un contexte crédible et concret (application réelle, objet du quotidien, système industriel, dispositif médical...), jamais un montage abstrait présenté "hors sol" sans justification d'usage.
-
+ 
 IMPÉRATIF — confinement au chapitre demandé : n'utilise QUE les notions, grandeurs et vocabulaire décrits dans "Chapitre concerné" ci-dessous. Ne fais JAMAIS intervenir une notion issue d'un AUTRE chapitre du programme, même si elle te semble naturelle ou que tu la connais par ailleurs (ex : ne jamais parler d'harmoniques/spectre/décomposition de Fourier si le chapitre demandé ne les mentionne pas — c'est une notion vue dans un chapitre ultérieur, l'élève ne l'a pas encore apprise à ce stade). La liste complète des chapitres donnée plus bas sert uniquement de repère général sur la progression du programme — ce n'est JAMAIS une source de contenu à mélanger avec le chapitre effectivement demandé. En cas de doute sur si une notion appartient bien au chapitre demandé, ne l'utilise pas.`;
 }
-
+ 
 function buildSchemasBlock(schemasSection) {
   return schemasSection
     ? `Banque de schémas électriques disponibles — quand un Document utile a besoin d'un schéma de montage, choisis celui qui correspond le mieux dans cette liste et insère UNIQUEMENT le marqueur "[SCHEMA:identifiant]" à cet endroit (rien d'autre autour, pas de description du schéma en plus) ; n'invente jamais d'identifiant absent de cette liste.
@@ -141,7 +141,7 @@ Exemple concret de ce qu'il ne faut JAMAIS faire : le catalogue ne contient qu'U
 ${schemasSection}`
     : `Aucun schéma électrique n'est disponible dans la banque pour l'instant — décris toujours les montages en mots (jamais en ASCII-art), comme indiqué plus haut.`;
 }
-
+ 
 // Réglage "Calcul d'incertitude" choisi dans l'appli (menu déroulant, partagé
 // entre TP et exercices) : 0 = aucun, 1 = un seul (défaut), "chaque" = à
 // chaque mesure/question de calcul.
@@ -162,7 +162,7 @@ function buildIncertitudeBlocks(incertitude, uniteLabel) {
   Dans un Document théorique fourni au début (rappel de cours) : rappelle UNIQUEMENT cette formule générale telle quelle, SANS l'appliquer ni l'adapter aux grandeurs particulières du cas traité à ce stade — l'application numérique se fait uniquement dans la question dédiée décrite ci-dessus.`;
   return { setting, countBlock, methodBlock };
 }
-
+ 
 // Conventions de rendu texte -> PDF (MathJax pour les formules) : partagées
 // telles quelles entre TP et exercices. `reponseContext` adapte juste le
 // vocabulaire de la règle "ne réponds jamais à une question" selon qu'on est
@@ -181,36 +181,36 @@ ${methodBlock ? "- " + methodBlock : ""}
   Les formules données dans un Document théorique (rappels de cours généraux, lois, relations non spécifiques au cas traité) restent normales : la règle interdit uniquement de donner la réponse littérale à une question juste après l'avoir posée.
 - EN DEHORS d'un bloc [FORMULE] (texte courant, listes, descriptions) : pas de moteur mathématique disponible, donc reste simple — accole directement la lettre et l'indice sans underscore ni accolade ("Us", "Ue", "R1", "R2", jamais "U_s", "R_1"), et écris toujours le symbole "Ω" pour une résistance (jamais "Ohm" en toutes lettres), par exemple "10 kΩ".`;
 }
-
+ 
 // ---------- Construction du prompt : TP ----------
 function buildMessages(consigne, chapterId, duree, useStm32, incertitude, image, history) {
   const { chapterSection, chapterList, examplesSection, structureTemplate, courbesMarkdown, materiel, schemasSection } =
     buildContextBlock(chapterId);
-
+ 
   const schemasBlock = buildSchemasBlock(schemasSection);
-
+ 
   const dureeLabel = duree || "2h";
   const dureeBlock = `Durée de séance visée : ${dureeLabel}. Dimensionne le nombre et la profondeur des manipulations en conséquence : un TP de 1h doit être sensiblement plus court/ciblé qu'un TP de 3h (moins de parties, moins de mesures répétées), ne mets pas artificiellement le même contenu quelle que soit la durée.`;
-
+ 
   const courbesUsageBlock = `Consulte la liste "Utilise activement ces courbes" fournie séparément avec les types de courbes disponibles : si le chapitre demandé y figure, utilise PAR DÉFAUT une courbe calculée via [COURBE:...] dans un Document utile et/ou une question d'exploitation de ce TP (théorie illustrée, ou courbe à faire lire/comparer à une mesure), plutôt que de t'en passer. Pour un chapitre qui n'y figure pas, une courbe reste possible mais n'est pas systématique — ne force jamais une courbe hors sujet.`;
-
+ 
   const stm32Block = useStm32
     ? `L'élève souhaite utiliser la carte STM32 Nucleo L152RE pour ce TP. Si tu choisis de l'utiliser dans le montage, tu DOIS impérativement inclure dans les Documents utiles le marqueur "[SCHEMA:stm32-l152re-pinout]" pour montrer son brochage — ne décris jamais son brochage en mots ou en ASCII-art à la place. Si finalement tu n'utilises pas cette carte pour ce TP, ignore cette consigne.`
     : "";
-
+ 
   const imageBlock = image
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire le TP : si elle montre un composant ou montage précis, base le TP dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
-
+ 
   const niveauBlock = buildNiveauBlock();
   const notationBlock = buildNotationBlock(incertitude, {
     uniteLabel: "mesure",
     ou: "dans le TP",
     regle: "une question de manipulation ou d'exploitation doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue (ça retire tout l'intérêt pédagogique) — même sous forme de \"formule à utiliser\" présentée juste après la question comme si c'était une aide neutre : si cette formule EST la réponse demandée (l'expression littérale qu'on demande d'établir), c'est interdit.",
   });
-
+ 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à construire eux-mêmes leur propre TP de physique appliquée, à partir d'une consigne qu'ils te donnent.
-
+ 
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
 - IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre du TP. Rien avant — ni commentaire, ni introduction, ni "Voici ton TP", ni ligne vide, ni signe de ponctuation isolé. Exemple de tout premier début de réponse : "Titre : Étude d'un filtre passe-bas du premier ordre".
 - Ta réponse ne contient QUE le TP lui-même, du titre jusqu'à la dernière question d'exploitation. N'ajoute aucun commentaire avant ou après (ex: pas de "N'hésite pas à demander de l'aide", pas de résumé final, pas de note personnelle) — rien que le contenu du TP.
@@ -223,64 +223,64 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - ${courbesUsageBlock}
 ${stm32Block ? "- " + stm32Block : ""}
 ${imageBlock ? "- " + imageBlock : ""}
-
+ 
 ${niveauBlock}
-
+ 
 ${notationBlock}
-
+ 
 ${structureTemplate}
-
+ 
 ${courbesMarkdown}
-
+ 
 Matériel réellement disponible en salle — le matériel proposé dans le TP (section "Matériel" et schémas) doit être choisi dans cette liste en priorité ; ne pas inventer de référence ou de valeur absente de cette liste, sauf si l'élève en demande explicitement une précise :
 ${materiel}
-
+ 
 ${schemasBlock}
-
+ 
 ${chapterSection}
-
-Liste complète des chapitres du programme (pour te situer si l'élève ne précise pas de chapitre, ou mentionne un autre chapitre que celui indiqué) :
+ 
+Liste des titres de tous les chapitres du programme (pour te situer dans la progression globale — le résumé détaillé du chapitre demandé est donné ci-dessus, dans "Chapitre concerné") :
 ${chapterList}
-
+ 
 ${examplesSection}`;
-
+ 
   const userContent = image
     ? [
         { type: "text", text: consigne },
         { type: "image_url", image_url: { url: image } },
       ]
     : consigne;
-
+ 
   // Historique de la conversation pour ce TP (demandes de correction
   // ultérieures, session du 5 septembre 2026) : le système reconstruit ce
   // même systemPrompt à chaque appel (déterministe à partir des mêmes
   // chapterId/duree/useStm32/incertitude), donc il forme un préfixe identique
   // d'une requête à l'autre — utile pour le cache automatique de Groq.
   const priorMessages = Array.isArray(history) ? history : [];
-
+ 
   return [
     { role: "system", content: systemPrompt },
     ...priorMessages,
     { role: "user", content: userContent },
   ];
 }
-
+ 
 // ---------- Construction du prompt : Exercice ----------
 function buildExerciceMessages(consigne, chapterId, image, history) {
   const { chapterSection, chapterList, exercisesExamplesSection, structureTemplateExercice, courbesMarkdown, schemasSection } =
     buildContextBlock(chapterId);
-
+ 
   const schemasBlock = buildSchemasBlock(schemasSection);
-
+ 
   // Un seul exercice à la fois (demande explicite de Ben, session du 5
   // septembre 2026 — le choix "plusieurs exercices" a été retiré de l'appli,
   // en partie pour limiter la consommation de tokens par génération).
   const nombreBlock = `Génère UN SEUL exercice. Consulte la liste "Utilise activement ces courbes" fournie séparément avec les types de courbes disponibles : si le chapitre demandé y figure, utilise PAR DÉFAUT une courbe calculée via [COURBE:...] pour cet exercice plutôt qu'un exercice purement calculatoire/textuel — ne t'en passe que si la consigne de l'élève l'exclut explicitement. Pour un chapitre qui n'y figure pas, une courbe reste possible mais n'est pas systématique — ne force jamais une courbe hors sujet.`;
-
+ 
   const imageBlock = image
     ? `L'élève a joint une image à sa consigne (par exemple une photo d'un composant, une page de datasheet, un schéma existant). Prends-la en compte pour construire l'exercice : si elle montre un composant ou montage précis, base l'exercice dessus ; si c'est une datasheet, appuie-toi sur les valeurs qui y figurent plutôt que d'en inventer.`
     : "";
-
+ 
   const niveauBlock = buildNiveauBlock();
   // Incertitude : TOUJOURS désactivée pour les exercices (demande explicite
   // de Ben, session du 5 septembre 2026) — contrairement au TP, pas de menu
@@ -290,9 +290,9 @@ function buildExerciceMessages(consigne, chapterId, image, history) {
     ou: "dans les Questions",
     regle: "une question doit rester une question, sans donner juste après le résultat, la formule-réponse ou la démonstration attendue — même sous forme de \"formule à utiliser\" présentée comme une aide neutre : si cette formule EST la réponse demandée, c'est interdit. Cette règle ne s'applique QU'À la section Questions : le Corrigé, lui, doit au contraire répondre complètement à chaque question, en détail, avec le raisonnement et les applications numériques.",
   });
-
+ 
   const systemPrompt = `Tu aides des élèves de BTS CIEL (Conception et Intégration de Systèmes Électroniques) à s'entraîner en générant un exercice de physique appliquée à résoudre sur le papier, à partir d'une consigne qu'ils te donnent. Contrairement à un TP, il n'y a pas de matériel physique ni de manipulation — c'est un problème avec un corrigé détaillé fourni à la fin, que l'élève peut consulter pour se corriger après avoir cherché.
-
+ 
 Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève demande explicitement autre chose — ce cadrage est une aide, pas une limite stricte) :
 - IMPÉRATIF : ta réponse doit commencer, dès le tout premier caractère, par "Titre : " suivi du titre de l'exercice. Rien avant — ni commentaire, ni introduction, ni ligne vide.
 - Ta réponse ne contient QUE l'exercice (ou les exercices) lui-même, du titre jusqu'au dernier Corrigé. N'ajoute aucun commentaire avant ou après.
@@ -301,48 +301,48 @@ Cadrage à respecter en priorité (mais tu peux t'en écarter si l'élève deman
 - Appuie-toi sur le cours réellement enseigné, résumé ci-dessous.
 - Registre neutre, académique, adapté à un élève de BTS.
 ${imageBlock ? "- " + imageBlock : ""}
-
+ 
 ${niveauBlock}
-
+ 
 ${notationBlock}
-
+ 
 ${structureTemplateExercice}
-
+ 
 ${courbesMarkdown}
-
+ 
 ${schemasBlock}
-
+ 
 ${chapterSection}
-
-Liste complète des chapitres du programme (pour te situer si l'élève ne précise pas de chapitre, ou mentionne un autre chapitre que celui indiqué) :
+ 
+Liste des titres de tous les chapitres du programme (pour te situer dans la progression globale — le résumé détaillé du chapitre demandé est donné ci-dessus, dans "Chapitre concerné") :
 ${chapterList}
-
+ 
 Exercices déjà présents dans le cours de ce chapitre — servent UNIQUEMENT à calibrer le niveau de difficulté et le style de question attendu à ce niveau, jamais à être recopiés ni reformulés à l'identique : génère toujours une situation différente (autres valeurs, autre contexte), jamais une simple reformulation de l'un de ces exemples :
 ${exercisesExamplesSection}`;
-
+ 
   const userContent = image
     ? [
         { type: "text", text: consigne },
         { type: "image_url", image_url: { url: image } },
       ]
     : consigne;
-
+ 
   const priorMessages = Array.isArray(history) ? history : [];
-
+ 
   return [
     { role: "system", content: systemPrompt },
     ...priorMessages,
     { role: "user", content: userContent },
   ];
 }
-
+ 
 // ---------- Endpoints ----------
-
-
+ 
+ 
 app.get("/", (_req, res) => {
   res.json({ ok: true, service: "tp-generator-server" });
 });
-
+ 
 app.get("/api/status", (req, res) => {
   const counters = getDailyCounters(req.ip);
   res.json({
@@ -353,12 +353,12 @@ app.get("/api/status", (req, res) => {
     },
   });
 });
-
+ 
 // Une image trop lourde ralentit inutilement la génération et gaspille le quota
 // (les tokens image comptent aussi) — 4 Mo de base64 correspond à une image déjà
 // bien compressée côté client (voir app.js, qui redimensionne avant envoi).
 const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
-
+ 
 // Historique de conversation (demande de correction d'un TP/exercice déjà
 // généré) — pas de limite stricte sur le nombre d'échanges pour l'instant
 // (décision du 5 septembre 2026, à revoir si l'usage réel pose problème),
@@ -382,10 +382,10 @@ function validateHistory(history) {
   }
   return { ok: true, value: history };
 }
-
+ 
 app.post("/api/generate-tp", ipThrottle, async (req, res) => {
   const { consigne, chapterId, duree, useStm32, incertitude, image, history } = req.body || {};
-
+ 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
   }
@@ -425,17 +425,17 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
       message: `Tu as atteint la limite de ${DAILY_LIMIT_TP} générations de TP par jour — réessaie demain.`,
     });
   }
-
+ 
   const messages = buildMessages(consigne.trim(), chapterId || null, duree || "2h", !!useStm32, incertitude || "1", image || null, historyCheck.value);
-
+ 
   const { promise, positionAtEnqueue } = enqueue(() =>
     generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
   );
-
+ 
   // Informe l'élève de sa position au moment de l'envoi (avant même le résultat),
   // utile pour le front s'il veut afficher "X élève(s) avant toi" immédiatement.
   res.setHeader("X-Queue-Position", String(positionAtEnqueue));
-
+ 
   try {
     const result = await promise;
     if (!result.ok) {
@@ -456,10 +456,10 @@ app.post("/api/generate-tp", ipThrottle, async (req, res) => {
     return res.status(500).json({ error: "internal_error", message: "Erreur inattendue du serveur." });
   }
 });
-
+ 
 app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
   const { consigne, chapterId, image, history } = req.body || {};
-
+ 
   if (typeof consigne !== "string" || consigne.trim().length < 5) {
     return res.status(400).json({ error: "invalid_input", message: "Consigne manquante ou trop courte." });
   }
@@ -490,20 +490,20 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
       message: `Tu as atteint la limite de ${DAILY_LIMIT_EXERCICE} générations d'exercice par jour — réessaie demain.`,
     });
   }
-
+ 
   const messages = buildExerciceMessages(
     consigne.trim(),
     chapterId || null,
     image || null,
     historyCheck.value
   );
-
+ 
   const { promise, positionAtEnqueue } = enqueue(() =>
     generateWithFallback(messages, { onProviderResult: recordProviderResult, hasImage: !!image })
   );
-
+ 
   res.setHeader("X-Queue-Position", String(positionAtEnqueue));
-
+ 
   try {
     const result = await promise;
     if (!result.ok) {
@@ -524,7 +524,7 @@ app.post("/api/generate-exercice", ipThrottle, async (req, res) => {
     return res.status(500).json({ error: "internal_error", message: "Erreur inattendue du serveur." });
   }
 });
-
+ 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`tp-generator-server à l'écoute sur le port ${PORT}`);
