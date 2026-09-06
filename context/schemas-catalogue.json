@@ -14,7 +14,7 @@
   {
     "id": "schema-a-4-resistances",
     "file": "schema-a-4-resistances.png",
-    "description": "Réseau à 4 résistances (R1 en parallèle à la source, R2 en série, puis R3 // R4) pour exercice sur les lois des mailles et des nœuds.",
+    "description": "Réseau à UN SEUL générateur E et 4 résistances (R1 en parallèle à la source, R2 en série, puis R3 // R4) pour exercice sur les lois des mailles et des nœuds — ne convient QUE pour un énoncé à un seul générateur, jamais pour un montage à plusieurs sources.",
     "chapterId": "ch1"
   },
   {
